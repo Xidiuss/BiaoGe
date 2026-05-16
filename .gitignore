@@ -1,0 +1,134 @@
+# ==========================================
+# CORE PRINCIPLE
+# ==========================================
+# Git tracks ONLY the addon product (BiaoGe/ folder + public docs).
+# All agent infrastructure, workspace notes, and tooling stay LOCAL.
+# See OPERATING_GUIDE.md (local-only) for full layout reasoning.
+# ==========================================
+
+# ==========================================
+# Agent infrastructure (local-only — never push)
+# ==========================================
+.agent-context/
+.agents/
+.specify/
+specs/
+evidence/
+_legacy/
+scripts/
+references/
+
+# Governance and workflow files — local only
+AGENTS.md
+AGENT_HANDOFF.md
+CLAUDE.md
+CODEX.md
+USAGE_PLAYBOOK.md
+historia.txt
+
+# Rolling per-session workspace (all levels)
+progress
+task_plan
+findings
+methodology
+friction
+progress.md
+task_plan.md
+findings.md
+methodology.md
+friction.md
+documents/
+
+# ==========================================
+# IDE i edytory
+# ==========================================
+.vscode/
+.vs/
+.idea/
+*.swp
+*.swo
+*.swn
+*~
+.DS_Store
+Thumbs.db
+!.vscode/settings.json
+
+# ==========================================
+# Obsidian (user-side visibility layer — never push)
+# ==========================================
+.obsidian/
+.trash/
+
+# ==========================================
+# Pliki tymczasowe, pamięć podręczna i logi
+# ==========================================
+*.tmp
+*.bak
+*.log
+.cache/
+.agent-tmp/
+tmpclaude*
+.claude/
+_local/
+
+# ==========================================
+# External / non-shipping artifacts
+# ==========================================
+ruvector
+ruvector.db
+RETAIL/
+/!!!ClassicAPI/
+.codegraph/
+
+# ==========================================
+# Binary files — generally ignore
+# ==========================================
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.zip
+*.7z
+*.rar
+*.tar.gz
+
+# Exception: BiaoGe ships Media/ textures (.tga) — they're tracked
+# Exception: BiaoGe icons in Media/icon/ — tracked
+# .png at repo root (screenshots etc.) — ignored
+# .png in BiaoGe/ — also ignored to keep repo lean
+# If you ship PNG textures: explicitly negate here
+
+# ==========================================
+# Dane WoW (World of Warcraft) / Runtime
+# ==========================================
+WTF/
+Screenshots/
+SavedVariables/
+*.lua.bak
+
+# ==========================================
+# Node.js
+# ==========================================
+node_modules/
+package-lock.json
+npm-debug.log
+
+# ==========================================
+# Build i Eksport
+# ==========================================
+dist/
+release/
+build/
+
+# ==========================================
+# Tajne dane (Secrets / Bezpieczeństwo)
+# ==========================================
+.env
+.env.local
+*.key
+*.pem
+*.p12
+*.pfx
+secrets/
+credentials.json

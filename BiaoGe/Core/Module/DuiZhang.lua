@@ -318,7 +318,7 @@ function BG.DuiZhangUI()
                     end)
                     bt:SetScript("OnEnter", function(self)
                         LibBG:UIDropDownMenu_StopCounting(self:GetParent():GetParent())
-                        button.Highlight:Show()
+                        button:LockHighlight()
                         GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, 0)
                         GameTooltip:ClearLines()
                         GameTooltip:AddLine(L["删除该账单"], 1, 1, 1, true)
@@ -326,7 +326,7 @@ function BG.DuiZhangUI()
                     end)
                     bt:SetScript("OnLeave", function(self)
                         LibBG:UIDropDownMenu_StartCounting(self:GetParent():GetParent())
-                        button.Highlight:Hide()
+                        button:UnlockHighlight()
                         GameTooltip:Hide()
                     end)
                 end
@@ -770,6 +770,7 @@ end
 
 ------------------账单生成函数------------------
 function BG.DuiZhangSet(num)
+    if not (BiaoGe.duizhang and BiaoGe.duizhang[num]) then return end
     local dz = BiaoGe.duizhang[num].zhangdan
     local FB = BG.FB1
     BG.lastduizhangNum = num

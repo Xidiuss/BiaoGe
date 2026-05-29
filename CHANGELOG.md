@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Fixed — Compat stubs (spec 001) + garrmission hyperlink crash (spec 007)
+
+- **`Core/Compat.lua` block 8f-ext** — `SetCamDistanceScale` no-op stub (retail-only `DressUpModel` method; WotLK engine ignores zoom override safely). Fixes crash in `ItemLib.lua` DressUp preview path.
+
+- **`Core/Compat.lua` block 8g** — `FlashClientIcon` no-op stub (retail-only OS taskbar flash global). Silences log spam on every load.
+
+- **`Core/Compat.lua` block 8h** — `SetItemRef` wrapper: early-return for `garrmission:` link prefix (BiaoGe's custom chat link scheme, WoD+ Garrison Missions — unknown to WotLK 3.3.5 native `ItemRef.lua`). Also adds `ItemRefTooltip.SetHyperlink` defense-in-depth override for addons that bypass `SetItemRef`. Fixes 3–17× "Unknown link type" errors per BiaoGe chat link click (ElvUI / WIM / LibExtraTip / Enchantrix / TradeSkillMaster hook chain). BiaoGe `hooksecurefunc("SetItemRef", …)` post-hooks still fire correctly.
+
+- **`Core/Module/DuiZhang.lua` lines 321/329** — `button.Highlight:Show/Hide()` → `button:LockHighlight()/UnlockHighlight()`. `C_UIDropDownMenuButtonTemplate` (!!!ClassicAPI) does not create a child `Highlight` frame; the correct API is the Button method pair.
+
+- **`Core/Module/DuiZhang.lua` line 773** — nil-guard `if not (BiaoGe.duizhang and BiaoGe.duizhang[num]) then return end` in `DuiZhangSet`. Prevents arithmetic-on-nil crash when a stale chat link is clicked before data is loaded.
+
+---
+
 ## [1.0.0] - 2026-05-16
 
 ### Initial public release of the WotLK 3.3.5 backport

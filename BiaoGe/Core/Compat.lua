@@ -485,7 +485,7 @@ do
     end
 end
 
--- 8f. DressUpModel methods missing in WotLK 3.3.5 (Retail-only transmog API)
+-- 8f. DressUpModel methods missing in WotLK 3.3.5 (Retail-only DressUpModel API)
 -- MODELFRAME_DEFAULT_ROTATION is defined in retail FrameXML/ModelFrame.lua;
 -- absent in WotLK 3.3.5 → SetRotation(nil) → "Usage: SetRotation(radians)" crash.
 if not MODELFRAME_DEFAULT_ROTATION then
@@ -497,12 +497,57 @@ do
         local mt  = getmetatable(tmpModel)
         local idx = mt and mt.__index
         if idx then
+            -- Transmog API (retail-only)
             if not idx.SetUseTransmogSkin       then idx.SetUseTransmogSkin       = function() end end
             if not idx.SetUseTransmogChoices     then idx.SetUseTransmogChoices     = function() end end
             if not idx.SetObeyHideInTransmogFlag then idx.SetObeyHideInTransmogFlag = function() end end
             if not idx.SetDoBlend                then idx.SetDoBlend                = function() end end
+            -- Camera scale (retail-only). No-op is safe: BG.DressUp (ItemLib.lua:1742/1745)
+            -- already controls zoom via SetPortraitZoom, scale multiplier is purely cosmetic.
+            if not idx.SetCamDistanceScale       then idx.SetCamDistanceScale       = function() end end
         end
         tmpModel:Hide()
+    end
+end
+
+-- 8g. FlashClientIcon — retail global (FrameXML/GlueXML) that flashes the WoW taskbar
+-- icon on Windows when the game is backgrounded. Absent in WotLK 3.3.5 → Trade.lua:2892
+-- crashes 5× per trade open when BiaoGe.options.tradeFlashClientIcon == 1.
+-- No-op is safe: purely cosmetic OS-level alert.
+if not FlashClientIcon then
+    FlashClientIcon = function() end
+end
+
+-- 8h. SetItemRef + ItemRefTooltip:SetHyperlink — WotLK 3.3.5 native doesn't
+-- recognize the 'garrmission:' link scheme (Garrison Missions, WoD+).
+-- BiaoGe uses it as a custom click target across 7+ modules (DuiZhang,
+-- AuctionLog, ItemOutTime, Loot, YY, Receive, ClearBiaoGe, QuickAccounting).
+-- Primary fix: wrap SetItemRef to skip garrmission: before native processing.
+-- Native SetItemRef crashes at ItemRef.lua:190 (arithmetic on nil startLink)
+-- for unrecognised link types, even when SetHyperlink is guarded. Wrapping
+-- SetItemRef in Compat.lua (before module load) means BiaoGe's own
+-- hooksecurefunc("SetItemRef", ...) handlers still fire after this wrapper
+-- returns — click actions (open DuiZhang panel etc.) are preserved.
+-- Defense-in-depth: also guard SetHyperlink for addons that call it directly
+-- (LibExtraTip, Aux-addon bypass SetItemRef entirely).
+do
+    local origSetItemRef = SetItemRef
+    if origSetItemRef then
+        SetItemRef = function(link, text, button, chatFrame)
+            if type(link) == "string" and link:sub(1, 12) == "garrmission:" then
+                return
+            end
+            return origSetItemRef(link, text, button, chatFrame)
+        end
+    end
+    local origSetHyperlink = ItemRefTooltip and ItemRefTooltip.SetHyperlink
+    if origSetHyperlink then
+        ItemRefTooltip.SetHyperlink = function(self, link, ...)
+            if type(link) == "string" and link:sub(1, 12) == "garrmission:" then
+                return
+            end
+            return origSetHyperlink(self, link, ...)
+        end
     end
 end
 

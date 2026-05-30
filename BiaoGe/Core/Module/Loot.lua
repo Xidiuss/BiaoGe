@@ -868,11 +868,8 @@ BG.Init2(function()
     function BG.autoLootButton.SPbutton:ShowRaidMember()
         local mainFrame = CreateFrame("Frame", nil, self, "BackdropTemplate")
         do
-            mainFrame:SetBackdrop({
-                edgeFile = "Interface/ChatFrame/ChatFrameBackground",
-                edgeSize = 1,
-            })
-            mainFrame:SetBackdropColor(0, 0, 0, 0)
+            mainFrame:SetBackdrop(BG_BACKDROP_THIN)
+            mainFrame:SetBackdropColor(0, 0, 0, 0.8)
             mainFrame:SetBackdropBorderColor(1, 1, 1, .5)
             mainFrame:SetSize(405, 380)
             mainFrame:SetPoint("TOPLEFT", self, "TOPRIGHT", 5, 0)
@@ -1228,11 +1225,8 @@ BG.Init2(function()
 
             BG.LootAuctionLogFrame = CreateFrame("Frame", nil, BG.LootAuctionLogButton, "BackdropTemplate")
             do
-                BG.LootAuctionLogFrame:SetBackdrop({
-                    edgeFile = "Interface/ChatFrame/ChatFrameBackground",
-                    edgeSize = 1
-                })
-                BG.LootAuctionLogFrame:SetBackdropColor(0, 0, 0, 0)
+                BG.LootAuctionLogFrame:SetBackdrop(BG_BACKDROP_THIN)
+                BG.LootAuctionLogFrame:SetBackdropColor(0, 0, 0, 0.8)
                 BG.LootAuctionLogFrame:SetBackdropBorderColor(r, g, b)
                 BG.LootAuctionLogFrame:SetSize(220, 400)
                 BG.LootAuctionLogFrame:SetPoint("TOPRIGHT", parent, "TOPLEFT", -2, 0)

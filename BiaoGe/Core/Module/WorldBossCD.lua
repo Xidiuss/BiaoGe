@@ -49,11 +49,8 @@ BG.Init(function()
 
     local f = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     do
-        f:SetBackdrop({
-            edgeFile = "Interface/ChatFrame/ChatFrameBackground",
-            edgeSize = 1,
-        })
-        f:SetBackdropColor(0, 0, 0, 0)
+        f:SetBackdrop(BG_BACKDROP_THIN)
+        f:SetBackdropColor(0, 0, 0, 0.8)
         f:SetBackdropBorderColor(.2, .2, .2, .8)
         f:SetSize(395, 340)
         f:SetPoint("BOTTOMRIGHT", BG.MainFrame, "BOTTOMRIGHT", -20, 75)

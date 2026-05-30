@@ -238,11 +238,14 @@ BG.Init(function()
     local f = CreateFrame("Frame", "BG.ChatAccountingFrame", UIParent, "BackdropTemplate")
     do
         f:SetBackdrop({
+            bgFile   = "Interface/Tooltips/UI-Tooltip-Background",
+            tile     = true,
+            tileSize = 16,
             edgeFile = "Interface/DialogFrame/UI-DialogBox-Border",
             edgeSize = 32,
             insets = { left = 3, right = 3, top = 3, bottom = 3 }
         })
-        f:SetBackdropColor(0, 0, 0, 0)
+        f:SetBackdropColor(0, 0, 0, 0.8)
         f:SetSize(430, 380)
         f:SetFrameStrata("HIGH")
         f:SetClampedToScreen(true)
@@ -540,11 +543,8 @@ BG.Init(function()
     -- 预览框
     do
         local f = CreateFrame("Frame", nil, BG.ChatAccountingFrame, "BackdropTemplate")
-        f:SetBackdrop({
-            edgeFile = "Interface/ChatFrame/ChatFrameBackground",
-            edgeSize = 1,
-        })
-        f:SetBackdropColor(0, 0, 0, 0)
+        f:SetBackdrop(BG_BACKDROP_THIN)
+        f:SetBackdropColor(0, 0, 0, 0.8)
         f:SetBackdropBorderColor(0, 0, 0, 1)
         f:SetSize(200, 200)
         f:SetPoint("BOTTOMLEFT", BG.ChatAccountingFrame, "BOTTOMRIGHT", -2, 5)

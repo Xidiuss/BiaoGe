@@ -86,12 +86,8 @@ BG.Init(function()
     -- 新增评价Frame
     do
         local f = CreateFrame("Frame", nil, BG.YYMainFrame, "BackdropTemplate")
-        f:SetBackdrop({
-            edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-            edgeSize = 10,
-            insets = { left = 3, right = 3, top = 3, bottom = 3 }
-        })
-        f:SetBackdropColor(0, 0, 0, 0)
+        f:SetBackdrop(BG_BACKDROP_PANEL_10)
+        f:SetBackdropColor(0, 0, 0, 0.8)
         f:SetSize(600, 180)
         f:SetPoint("TOPLEFT", BG.MainFrame, "TOPLEFT", 25, -55)
         BG.YYMainFrame.new = f
@@ -287,12 +283,8 @@ BG.Init(function()
         do
             local maxbytes = 200
             local f = CreateFrame("Frame", nil, BG.YYMainFrame.new, "BackdropTemplate")
-            f:SetBackdrop({
-                edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-                edgeSize = 16,
-                insets = { left = 3, right = 3, top = 3, bottom = 3 }
-            })
-            f:SetBackdropColor(0, 0, 0, 0)
+            f:SetBackdrop(BG_BACKDROP_PANEL)
+            f:SetBackdropColor(0, 0, 0, 0.8)
             f:SetBackdropBorderColor(1, 1, 1, 0.6)
             f:SetSize(420, 80)
             f:SetPoint("TOPLEFT", 105, -17 - height * n)
@@ -454,12 +446,8 @@ BG.Init(function()
         local n = 0
 
         local f = CreateFrame("Frame", nil, BG.YYMainFrame, "BackdropTemplate")
-        f:SetBackdrop({
-            edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-            edgeSize = 10,
-            insets = { left = 3, right = 3, top = 3, bottom = 3 }
-        })
-        f:SetBackdropColor(0, 0, 0, 0)
+        f:SetBackdrop(BG_BACKDROP_PANEL_10)
+        f:SetBackdropColor(0, 0, 0, 0.8)
         f:SetSize(BG.YYMainFrame.new:GetWidth(), 470)
         f:SetPoint("TOPLEFT", BG.YYMainFrame.new, "BOTTOMLEFT", 0, -20)
         BG.YYMainFrame.my = f
@@ -745,12 +733,8 @@ BG.Init(function()
     -- 查询评价Frame
     do
         local f = CreateFrame("Frame", nil, BG.YYMainFrame, "BackdropTemplate")
-        f:SetBackdrop({
-            edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-            edgeSize = 10,
-            insets = { left = 3, right = 3, top = 3, bottom = 3 }
-        })
-        f:SetBackdropColor(0, 0, 0, 0)
+        f:SetBackdrop(BG_BACKDROP_PANEL_10)
+        f:SetBackdropColor(0, 0, 0, 0.8)
         f:SetSize(BG.YYMainFrame.new:GetWidth(), 670)
         f:SetPoint("TOPLEFT", BG.YYMainFrame.new, "TOPRIGHT", 20, 0)
         BG.YYMainFrame.search = f
@@ -1056,12 +1040,8 @@ BG.Init(function()
         -- 评价筛选
         do
             local f = CreateFrame("Frame", nil, BG.YYMainFrame.search, "BackdropTemplate")
-            f:SetBackdrop({
-                edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-                edgeSize = 10,
-                insets = { left = 3, right = 3, top = 3, bottom = 3 }
-            })
-            f:SetBackdropColor(0, 0, 0, 0)
+            f:SetBackdrop(BG_BACKDROP_PANEL_10)
+            f:SetBackdropColor(0, 0, 0, 0.8)
             f:SetPoint("TOPLEFT", 10, -45)
             f:SetPoint("BOTTOMRIGHT", BG.YYMainFrame.search, "TOPRIGHT", -10, -75)
             BG.YYMainFrame.resultPingjia = f
@@ -1121,12 +1101,8 @@ BG.Init(function()
             local n = 0
 
             local f = CreateFrame("Frame", nil, BG.YYMainFrame.search, "BackdropTemplate")
-            f:SetBackdrop({
-                edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-                edgeSize = 10,
-                insets = { left = 3, right = 3, top = 3, bottom = 3 }
-            })
-            f:SetBackdropColor(0, 0, 0, 0)
+            f:SetBackdrop(BG_BACKDROP_PANEL_10)
+            f:SetBackdropColor(0, 0, 0, 0.8)
             f:SetPoint("TOPLEFT", BG.YYMainFrame.resultPingjia, "BOTTOMLEFT", 0, 2)
             f:SetPoint("BOTTOMRIGHT", -10, 10)
             BG.YYMainFrame.result = f
@@ -1780,11 +1756,14 @@ BG.Init(function()
             local f = CreateFrame("Frame", "BG.EndPJ.new", UIParent, "BackdropTemplate")
             do
                 f:SetBackdrop({
+                    bgFile   = "Interface/Tooltips/UI-Tooltip-Background",
+                    tile     = true,
+                    tileSize = 16,
                     edgeFile = "Interface/DialogFrame/UI-DialogBox-Border",
                     edgeSize = 32,
                     insets = { left = 3, right = 3, top = 3, bottom = 3 }
                 })
-                f:SetBackdropColor(0, 0, 0, 0)
+                f:SetBackdropColor(0, 0, 0, 0.8)
                 f:SetSize(340, 275)
                 f:SetPoint("TOP", 0, -300)
                 f:SetClampedToScreen(true)
@@ -2032,12 +2011,8 @@ BG.Init(function()
             do
                 local maxbytes = 200
                 local f = CreateFrame("Frame", nil, BG.EndPJ.new, "BackdropTemplate")
-                f:SetBackdrop({
-                    edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-                    edgeSize = 16,
-                    insets = { left = 3, right = 3, top = 3, bottom = 3 }
-                })
-                f:SetBackdropColor(0, 0, 0, 0)
+                f:SetBackdrop(BG_BACKDROP_PANEL)
+                f:SetBackdropColor(0, 0, 0, 0.8)
                 f:SetBackdropBorderColor(1, 1, 1, 0.6)
                 f:SetSize(200, height * 2)
                 f:SetPoint("TOPLEFT", 95, height_start - height * n - 2)

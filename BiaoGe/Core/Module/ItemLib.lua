@@ -1712,7 +1712,7 @@ do
         if not BG.DressUpFrame then
             local bg = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
             bg:SetBackdrop(BG_BACKDROP_THIN)
-            bg:SetBackdropColor(0, 0, 0, 0.65)
+            bg:SetBackdropColor(0, 0, 0, 0.8)
             bg:SetBackdropBorderColor(1, 1, 1, .8)
             bg:SetSize(430, 480)
             bg:SetFrameStrata("TOOLTIP")

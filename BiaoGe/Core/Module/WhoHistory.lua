@@ -28,11 +28,8 @@ BG.Init2(function()
     BiaoGe.whoFrame.history = BiaoGe.whoFrame.history or {}
 
     local f = CreateFrame("Frame", nil, WhoFrame, "BackdropTemplate")
-    f:SetBackdrop({
-        edgeFile = "Interface/ChatFrame/ChatFrameBackground",
-        edgeSize = 1,
-    })
-    f:SetBackdropColor(0, 0, 0, 0)
+    f:SetBackdrop(BG_BACKDROP_THIN)
+    f:SetBackdropColor(0, 0, 0, 0.8)
     f:SetBackdropBorderColor(0, 0, 0, 1)
     f:SetPoint("BOTTOMLEFT", WhoFrameEditBoxInset or WhoFrameEditBox, "BOTTOMRIGHT",
         WhoFrameEditBoxInset and 5 or 15, 0)
@@ -200,11 +197,8 @@ BG.Init2(function()
             -- 名单
             do
                 local f = CreateFrame("Frame", nil, frame, "BackdropTemplate")
-                f:SetBackdrop({
-                    edgeFile = "Interface/ChatFrame/ChatFrameBackground",
-                    edgeSize = 1,
-                })
-                f:SetBackdropColor(0, 0, 0, 0)
+                f:SetBackdrop(BG_BACKDROP_THIN)
+                f:SetBackdropColor(0, 0, 0, 0.8)
                 f:SetBackdropBorderColor(1, 1, 1, 0.6)
                 f:SetPoint("TOPLEFT", 1, 0)
                 f:SetPoint("BOTTOMRIGHT", -1, 90)
@@ -253,11 +247,8 @@ BG.Init2(function()
             -- 官网
             do
                 local f = CreateFrame("Frame", nil, frame, "BackdropTemplate")
-                f:SetBackdrop({
-                    edgeFile = "Interface/ChatFrame/ChatFrameBackground",
-                    edgeSize = 1,
-                })
-                f:SetBackdropColor(0, 0, 0, 0)
+                f:SetBackdrop(BG_BACKDROP_THIN)
+                f:SetBackdropColor(0, 0, 0, 0.8)
                 f:SetBackdropBorderColor(1, 1, 1, 0.6)
                 f:SetPoint("TOPLEFT", frame, "BOTTOMLEFT", 1, 60)
                 f:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -1, 0)

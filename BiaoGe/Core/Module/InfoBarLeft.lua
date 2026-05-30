@@ -50,11 +50,8 @@ BG.Init(function()
                 _min = min(v.price, _min)
             end
             local f = CreateFrame("Frame", nil, BG.MainFrame, "BackdropTemplate")
-            f:SetBackdrop({
-                edgeFile = "Interface/ChatFrame/ChatFrameBackground",
-                edgeSize = 1,
-            })
-            f:SetBackdropColor(0, 0, 0, 0)
+            f:SetBackdrop(BG_BACKDROP_THIN)
+            f:SetBackdropColor(0, 0, 0, 0.8)
             f:SetBackdropBorderColor(1, 1, 1, .5)
             f:SetSize(500, 300)
             f:SetPoint("BOTTOMLEFT", self, "TOPLEFT", 0, 0)

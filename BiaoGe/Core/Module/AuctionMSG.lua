@@ -33,12 +33,8 @@ BG.Init(function()
     -- UI
     do
         BG.FrameAuctionMSGbg = CreateFrame("Frame", nil, BG.MainFrame, "BackdropTemplate")
-        BG.FrameAuctionMSGbg:SetBackdrop({
-            edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-            edgeSize = 16,
-            insets = { left = 3, right = 3, top = 3, bottom = 3 }
-        })
-        BG.FrameAuctionMSGbg:SetBackdropColor(0, 0, 0, 0)
+        BG.FrameAuctionMSGbg:SetBackdrop(BG_BACKDROP_PANEL)
+        BG.FrameAuctionMSGbg:SetBackdropColor(0, 0, 0, 0.8)
         BG.FrameAuctionMSGbg:SetPoint("CENTER")
         if BiaoGe.auctionMSGIsBig then
             BG.FrameAuctionMSGbg:SetSize(bigX, bigY)

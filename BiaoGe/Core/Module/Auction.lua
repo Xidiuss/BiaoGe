@@ -481,6 +481,9 @@ BG.Init(function()
             local f = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
             do
                 f:SetBackdrop({
+                    bgFile   = "Interface\\Tooltips\\UI-Tooltip-Background",
+                    tile     = true,
+                    tileSize = 8,
                     edgeFile = "Interface\\Buttons\\WHITE8x8",
                     edgeSize = 2,
                 })

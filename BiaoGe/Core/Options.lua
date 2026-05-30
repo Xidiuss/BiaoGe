@@ -4198,12 +4198,8 @@ BG.Init(function()
 
 
         local f = CreateFrame("Frame", nil, config, "BackdropTemplate")
-        f:SetBackdrop({
-            edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-            edgeSize = 16,
-            insets = { left = 3, right = 3, top = 3, bottom = 3 }
-        })
-        f:SetBackdropColor(0, 0, 0, 0)
+        f:SetBackdrop(BG_BACKDROP_PANEL)
+        f:SetBackdropColor(0, 0, 0, 0.8)
         f:SetSize(width2, height2)
         f:EnableMouse(true)
         f:SetPoint("TOPLEFT", width + width2 + 5, height - 15)
@@ -4244,12 +4240,8 @@ BG.Init(function()
         CreateButton(L["集结号密语模板"], "configChooseMeetingHornWhisper")
 
         local f = CreateFrame("Frame", nil, config, "BackdropTemplate")
-        f:SetBackdrop({
-            edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-            edgeSize = 16,
-            insets = { left = 3, right = 3, top = 3, bottom = 3 }
-        })
-        f:SetBackdropColor(0, 0, 0, 0)
+        f:SetBackdrop(BG_BACKDROP_PANEL)
+        f:SetBackdropColor(0, 0, 0, 0.8)
         f:SetSize(width3, height2)
         f:EnableMouse(true)
         f:SetPoint("TOPLEFT", width + width2 + 5 + width2 + 5, height - 15)

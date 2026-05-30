@@ -300,11 +300,8 @@ BG.Init(function()
     -- 25人
     local f, child = BG.CreateScrollFrame(BG.AchievementMainFrame, 300, 250, nil, true)
     do
-        f:SetBackdrop({
-            edgeFile = "Interface/ChatFrame/ChatFrameBackground",
-            edgeSize = 1,
-        })
-        f:SetBackdropColor(0, 0, 0, 0)
+        f:SetBackdrop(BG_BACKDROP_THIN)
+        f:SetBackdropColor(0, 0, 0, 0.8)
         f:SetBackdropBorderColor(1, 1, 1, .2)
         f:SetPoint("TOPLEFT", BG.MainFrame, "TOPLEFT", 100, -80)
         f.scroll:SetWidth(f:GetWidth() - 10)
@@ -323,11 +320,8 @@ BG.Init(function()
     -- 10人
     local f, child = BG.CreateScrollFrame(BG.AchievementMainFrame, 300, 210, nil, true)
     do
-        f:SetBackdrop({
-            edgeFile = "Interface/ChatFrame/ChatFrameBackground",
-            edgeSize = 1,
-        })
-        f:SetBackdropColor(0, 0, 0, 0)
+        f:SetBackdrop(BG_BACKDROP_THIN)
+        f:SetBackdropColor(0, 0, 0, 0.8)
         f:SetBackdropBorderColor(1, 1, 1, .2)
         f:SetPoint("TOPLEFT", BG.AchievementMainFrame.Frame1.frame, "BOTTOMLEFT", 0, -0)
         f.scroll:SetWidth(f:GetWidth() - 10)
@@ -340,11 +334,8 @@ BG.Init(function()
     -- 统计
     local f, child = BG.CreateScrollFrame(BG.AchievementMainFrame, 300, 160, nil, true)
     do
-        f:SetBackdrop({
-            edgeFile = "Interface/ChatFrame/ChatFrameBackground",
-            edgeSize = 1,
-        })
-        f:SetBackdropColor(0, 0, 0, 0)
+        f:SetBackdrop(BG_BACKDROP_THIN)
+        f:SetBackdropColor(0, 0, 0, 0.8)
         f:SetBackdropBorderColor(1, 1, 1, .2)
         f:SetPoint("TOPLEFT", BG.AchievementMainFrame.Frame2.frame, "BOTTOMLEFT", 0, -20)
         f.scroll:SetWidth(f:GetWidth() - 10)

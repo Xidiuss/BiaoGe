@@ -42,12 +42,8 @@ BG.Init(function()
     f:SetScript("OnClick", function(self)
         if not self.copyFrame then
             local f = CreateFrame("Frame", nil, self, "BackdropTemplate")
-            f:SetBackdrop({
-                edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-                edgeSize = 16,
-                insets = { left = 3, right = 3, top = 3, bottom = 3 }
-            })
-            f:SetBackdropColor(0, 0, 0, 0)
+            f:SetBackdrop(BG_BACKDROP_PANEL)
+            f:SetBackdropColor(0, 0, 0, 0.8)
             f:SetSize(150, 30)
             f:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 0, -2)
             f:SetFrameLevel(130)

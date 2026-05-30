@@ -480,11 +480,8 @@ function BG.DuiZhangUI()
         function bt:ShowRaidMember()
             if not BG.DuiZhangMainFrame.raidMemberFrame then
                 local mainFrame = CreateFrame("Frame", nil, BG.DuiZhangMainFrame, "BackdropTemplate")
-                mainFrame:SetBackdrop({
-                    edgeFile = "Interface/ChatFrame/ChatFrameBackground",
-                    edgeSize = 1,
-                })
-                mainFrame:SetBackdropColor(0, 0, 0, 0)
+                mainFrame:SetBackdrop(BG_BACKDROP_THIN)
+                mainFrame:SetBackdropColor(0, 0, 0, 0.8)
                 mainFrame:SetBackdropBorderColor(1, 1, 1, .5)
                 mainFrame:SetSize(405, 290)
                 mainFrame:SetPoint("BOTTOM", self, "TOP", 0, 5)
@@ -501,11 +498,8 @@ function BG.DuiZhangUI()
 
                 local function CreateRaidButton(i)
                     local bt = CreateFrame("Frame", nil, mainFrame, "BackdropTemplate")
-                    bt:SetBackdrop({
-                        edgeFile = "Interface/ChatFrame/ChatFrameBackground",
-                        edgeSize = 1,
-                    })
-                    bt:SetBackdropColor(0, 0, 0, 0)
+                    bt:SetBackdrop(BG_BACKDROP_THIN)
+                    bt:SetBackdropColor(0, 0, 0, 0.3)
                     bt:SetBackdropBorderColor(1, 1, 1, .2)
                     bt:SetSize(90, 20)
                     if i == 1 then
@@ -607,12 +601,8 @@ function BG.DuiZhangUI()
     -- 聊天记录
     do
         local f = CreateFrame("Frame", nil, BG.DuiZhangMainFrame, "BackdropTemplate")
-        f:SetBackdrop({
-            edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-            edgeSize = 16,
-            insets = { left = 3, right = 3, top = 3, bottom = 3 }
-        })
-        f:SetBackdropColor(0, 0, 0, 0)
+        f:SetBackdrop(BG_BACKDROP_PANEL)
+        f:SetBackdropColor(0, 0, 0, 0.8)
         f:SetPoint("BOTTOMRIGHT", BG.MainFrame, -40, 90)
         f:SetSize(335, 190)
         f:EnableMouse(true)

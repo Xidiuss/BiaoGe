@@ -39,12 +39,8 @@ function BG.HistoryUI()
     ------------------下拉框架------------------
     do
         local f = CreateFrame("Frame", nil, BG.MainFrame, "BackdropTemplate")
-        f:SetBackdrop({
-            edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-            edgeSize = 16,
-            insets = { left = 3, right = 3, top = 3, bottom = 3 }
-        })
-        f:SetBackdropColor(0, 0, 0, 0)
+        f:SetBackdrop(BG_BACKDROP_PANEL)
+        f:SetBackdropColor(0, 0, 0, 0.8)
         f:SetSize(270, 380)
         f:SetPoint("TOPRIGHT", BG.MainFrame, "TOPRIGHT", 0, -20)
         f.frameLevel = 130
@@ -523,12 +519,8 @@ function BG.HistoryUI()
     ------------------改名------------------
     do
         local f = CreateFrame("Frame", nil, BG.History.List, "BackdropTemplate")
-        f:SetBackdrop({
-            edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-            edgeSize = 16,
-            insets = { left = 3, right = 3, top = 3, bottom = 3 }
-        })
-        f:SetBackdropColor(0, 0, 0, 0)
+        f:SetBackdrop(BG_BACKDROP_PANEL)
+        f:SetBackdropColor(0, 0, 0, 0.8)
         f:SetSize(250, 150)
         f:SetPoint("TOPRIGHT", BG.History.List, "TOPLEFT", -2, 0)
         f:SetFrameLevel(130)
@@ -544,12 +536,8 @@ function BG.HistoryUI()
         BG.History.GaiMingBiaoTi = text
 
         local f = CreateFrame("Frame", nil, BG.History.GaiMingFrame, "BackdropTemplate")
-        f:SetBackdrop({
-            edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-            edgeSize = 16,
-            insets = { left = 3, right = 3, top = 3, bottom = 3 }
-        })
-        f:SetBackdropColor(0, 0, 0, 0)
+        f:SetBackdrop(BG_BACKDROP_PANEL)
+        f:SetBackdropColor(0, 0, 0, 0.8)
         f:SetSize(230, 60)
         f:SetPoint("TOPRIGHT", BG.History.GaiMingFrame, "TOPRIGHT", -10, -45)
 

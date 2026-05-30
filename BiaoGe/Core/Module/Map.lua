@@ -94,11 +94,8 @@ BG.Init(function()
     local frameName = "BG.MapFrame"
     local f = CreateFrame("Frame", frameName, UIParent, "BackdropTemplate")
     do
-        f:SetBackdrop({
-            edgeFile = "Interface/ChatFrame/ChatFrameBackground",
-            edgeSize = 1,
-        })
-        f:SetBackdropColor(0, 0, 0, 0)
+        f:SetBackdrop(BG_BACKDROP_THIN)
+        f:SetBackdropColor(0, 0, 0, 0.8)
         f:SetBackdropBorderColor(0, 0, 0, 1)
         f:SetSize(450, 450)
         f:SetClampedToScreen(true)

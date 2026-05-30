@@ -646,12 +646,8 @@ BG.Init(function()
     do
         local f = CreateFrame("Frame", nil, BG.auctionLogFrame, "BackdropTemplate")
         do
-            f:SetBackdrop({
-                edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-                edgeSize = 10,
-                insets = { left = 3, right = 3, top = 3, bottom = 3 }
-            })
-            f:SetBackdropColor(0, 0, 0, 0)
+            f:SetBackdrop(BG_BACKDROP_PANEL_10)
+            f:SetBackdropColor(0, 0, 0, 0.8)
             f:SetSize(220, 140)
             f:SetFrameLevel(117)
             f:EnableMouse(true)

@@ -782,11 +782,8 @@ BG.Init(function()
     do
         BG.tradeQianKuanListFrame = {}
         local f = CreateFrame("Frame", nil, TradeFrame, "BackdropTemplate")
-        f:SetBackdrop({
-            edgeFile = "Interface/ChatFrame/ChatFrameBackground",
-            edgeSize = 1,
-        })
-        f:SetBackdropColor(0, 0, 0, 0)
+        f:SetBackdrop(BG_BACKDROP_THIN)
+        f:SetBackdropColor(0, 0, 0, 0.8)
         f:SetBackdropBorderColor(0, 0, 0, 1)
         f:SetSize(TradeFrame:GetWidth() + 2, 175)
         f:SetPoint("TOP", TradeFrame, "BOTTOM", 0, -1)
@@ -1155,10 +1152,8 @@ BG.Init(function()
         do
             BG.tradeSeeFrame = {}
             local f = CreateFrame("Frame", nil, TradeFrame, "BackdropTemplate")
-            f:SetBackdrop({
-                edgeFile = "Interface/ChatFrame/ChatFrameBackground",
-                edgeSize = 1,
-            })
+            f:SetBackdrop(BG_BACKDROP_THIN)
+            f:SetBackdropColor(0, 0, 0, 0.8)
             f:SetSize(200, 150)
             f:SetPoint("BOTTOMLEFT", TradeFrame, "BOTTOMRIGHT", 1, -1)
             f:EnableMouse(true)
@@ -1180,7 +1175,7 @@ BG.Init(function()
             BG.tradeSeeFrame.text = text
 
             function BG.tradeSeeFrame.frame:SetNormalColor()
-                self:SetBackdropColor(0, 0, 0, 0)
+                self:SetBackdropColor(0, 0, 0, 0.8)
                 self:SetBackdropBorderColor(0, 0, 0, 1)
             end
 
@@ -1190,7 +1185,7 @@ BG.Init(function()
             end
 
             function BG.tradeSeeFrame.frame:SetGreenColor()
-                self:SetBackdropColor(0, 0, 0, 0)
+                self:SetBackdropColor(0, 0, 0, 0.8)
                 self:SetBackdropBorderColor(0, 1, 0, 1)
             end
 
@@ -1350,11 +1345,8 @@ BG.Init(function()
         -- 主UI
         do
             local f = CreateFrame("Frame", nil, TradeFrame, "BackdropTemplate")
-            f:SetBackdrop({
-                edgeFile = "Interface/ChatFrame/ChatFrameBackground",
-                edgeSize = 1,
-            })
-            f:SetBackdropColor(0, 0, 0, 0)
+            f:SetBackdrop(BG_BACKDROP_THIN)
+            f:SetBackdropColor(0, 0, 0, 0.8)
             f:SetBackdropBorderColor(0, 0, 0, 1)
             f:SetSize(BG.tradeSeeFrame.frame:GetWidth(), 110)
             f:SetPoint("BOTTOM", BG.tradeSeeFrame.frame, "TOP", 0, 1)
@@ -1760,11 +1752,8 @@ BG.Init(function()
         function BG.CreateTradeFastGiveMoneyFrame()
             if BG.tradeFastGiveMoneyFrame.frame then return end
             local f = CreateFrame("Frame", nil, TradeFrame, "BackdropTemplate")
-            f:SetBackdrop({
-                edgeFile = "Interface/ChatFrame/ChatFrameBackground",
-                edgeSize = 1,
-            })
-            f:SetBackdropColor(0, 0, 0, 0)
+            f:SetBackdrop(BG_BACKDROP_THIN)
+            f:SetBackdropColor(0, 0, 0, 0.8)
             f:SetBackdropBorderColor(0, 0, 0, 1)
             f:SetPoint("TOPLEFT", TradeFrame, "TOPRIGHT", 1, -20)
             f:SetSize(200, 1)

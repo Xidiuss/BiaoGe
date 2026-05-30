@@ -180,12 +180,8 @@ do
             end
 
             local f = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
-            f:SetBackdrop({
-                edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-                edgeSize = 16,
-                insets = { left = 3, right = 3, top = 3, bottom = 3 }
-            })
-            f:SetBackdropColor(0, 0, 0, 0)
+            f:SetBackdrop(BG_BACKDROP_PANEL)
+            f:SetBackdropColor(0, 0, 0, 0.8)
             f:SetSize(300, 500)
             f:SetPoint("CENTER")
             f:EnableMouse(true)
@@ -851,12 +847,8 @@ do
             end
 
             local f = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
-            f:SetBackdrop({
-                edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-                edgeSize = 16,
-                insets = { left = 3, right = 3, top = 3, bottom = 3 }
-            })
-            f:SetBackdropColor(0, 0, 0, 0)
+            f:SetBackdrop(BG_BACKDROP_PANEL)
+            f:SetBackdropColor(0, 0, 0, 0.8)
             f:SetSize(300, 500)
             f:SetPoint("CENTER")
             f:EnableMouse(true)

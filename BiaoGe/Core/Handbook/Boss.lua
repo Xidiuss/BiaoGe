@@ -70,12 +70,8 @@ BG.Init(function()
     function BG.CreateBossNameUI(frame, FB)
         -- 左边Boss名字列表
         local f = CreateFrame("Frame", nil, frame, "BackdropTemplate")
-        f:SetBackdrop({
-            edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-            edgeSize = 16,
-            insets = { left = 3, right = 3, top = 3, bottom = 3 }
-        })
-        f:SetBackdropColor(0, 0, 0, 0)
+        f:SetBackdrop(BG_BACKDROP_PANEL)
+        f:SetBackdropColor(0, 0, 0, 0.8)
         f:SetSize(230, 700)
         f:SetPoint("TOPLEFT", BG.MainFrame, "TOPLEFT", 25, -80)
         frame.BossNameFrame = f
@@ -88,12 +84,8 @@ BG.Init(function()
 
         -- 中间技能介绍
         local f = CreateFrame("Frame", nil, frame, "BackdropTemplate")
-        f:SetBackdrop({
-            edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-            edgeSize = 16,
-            insets = { left = 3, right = 3, top = 3, bottom = 3 }
-        })
-        f:SetBackdropColor(0, 0, 0, 0)
+        f:SetBackdrop(BG_BACKDROP_PANEL)
+        f:SetBackdropColor(0, 0, 0, 0.8)
         f:SetSize(620, 700)
         f:SetPoint("TOPLEFT", frame.BossNameFrame, "TOPRIGHT", 10, 0)
         frame.spellFramebg = f
@@ -127,12 +119,8 @@ BG.Init(function()
 
         -- 右边职业职责
         local f = CreateFrame("Frame", nil, frame, "BackdropTemplate")
-        f:SetBackdrop({
-            edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-            edgeSize = 16,
-            insets = { left = 3, right = 3, top = 3, bottom = 3 }
-        })
-        f:SetBackdropColor(0, 0, 0, 0)
+        f:SetBackdrop(BG_BACKDROP_PANEL)
+        f:SetBackdropColor(0, 0, 0, 0.8)
         f:SetSize(370, 700)
         f:SetPoint("TOPLEFT", frame.spellFramebg, "TOPRIGHT", 10, 0)
         frame.classFramebg = f

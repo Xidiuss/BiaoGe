@@ -412,12 +412,8 @@ do
         local i = self.i
         if not BiaoGe[FB]["boss" .. b]["loot" .. i] then return end
         local f = CreateFrame("Frame", nil, BG.FrameZhuangbeiList, "BackdropTemplate")
-        f:SetBackdrop({
-            edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-            edgeSize = 16,
-            insets = { left = 3, right = 3, top = 3, bottom = 3 }
-        })
-        f:SetBackdropColor(0, 0, 0, 0)
+        f:SetBackdrop(BG_BACKDROP_PANEL)
+        f:SetBackdropColor(0, 0, 0, 0.8)
         f:SetPoint("TOPRIGHT", BG.FrameZhuangbeiList, "TOPLEFT", 3, 0)
         f:SetSize(120, BG.FrameZhuangbeiList:GetHeight())
         f:EnableMouse(true)
@@ -533,12 +529,8 @@ do
         -- 背景框
         local f = CreateFrame("Frame", nil, BG.MainFrame, "BackdropTemplate")
         f:SetFrameLevel(120)
-        f:SetBackdrop({
-            edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-            edgeSize = 16,
-            insets = { left = 3, right = 3, top = 3, bottom = 3 }
-        })
-        f:SetBackdropColor(0, 0, 0, 0)
+        f:SetBackdrop(BG_BACKDROP_PANEL)
+        f:SetBackdropColor(0, 0, 0, 0.8)
         f:SetPoint("TOPLEFT", self, "BOTTOMLEFT", -9, 2)
         f:EnableMouse(true)
         BG.FrameZhuangbeiList = f
@@ -1049,19 +1041,15 @@ do
         if not BG.FrameNumFrame then
             local f = CreateFrame("Frame", nil, nil, "BackdropTemplate")
             f:SetSize(130, 230)
-            f:SetBackdrop({
-                edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-                edgeSize = 16,
-                insets = { left = 3, right = 3, top = 3, bottom = 3 }
-            })
-            f:SetBackdropColor(0, 0, 0, 0)
+            f:SetBackdrop(BG_BACKDROP_PANEL)
+            f:SetBackdropColor(0, 0, 0, 0.8)
             f:Hide()
             f:EnableMouse(true)
             BG.FrameNumFrame = f
-            f:SetScript("OnHide", function(self)
-                self:SetParent(nil)
-                self:Hide()
-            end)
+            -- UWAGA: brak OnHide z SetParent(nil) — reparenting podczas OnHide
+            -- korumpuje hierarchię ramek w 3.3.5 (silent crash przy szybkim
+            -- show/hide cyklu z prawego-klik czyszczenia FrameJineList).
+            -- Numpad i tak jest re-parentowany przy każdym Show w CreateNumFrame.
 
             f.buttons = {}
 
@@ -1220,12 +1208,8 @@ do
         f:SetWidth(100)
         f:SetHeight(230)
         f:SetFrameLevel(120)
-        f:SetBackdrop({
-            edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-            edgeSize = 16,
-            insets = { left = 3, right = 3, top = 3, bottom = 3 }
-        })
-        f:SetBackdropColor(0, 0, 0, 0)
+        f:SetBackdrop(BG_BACKDROP_PANEL)
+        f:SetBackdropColor(0, 0, 0, 0.8)
         f:SetPoint("TOPLEFT", jine, "BOTTOMLEFT", -9, 2)
         f:EnableMouse(true)
         f:SetHyperlinksEnabled(true)

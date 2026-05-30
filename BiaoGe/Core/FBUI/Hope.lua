@@ -999,12 +999,8 @@ function BG.HopeDaoChuUI()
                 local sbg, scroll, child
                 local bg = CreateFrame("Frame", nil, bt, "BackdropTemplate")
                 do
-                    bg:SetBackdrop({
-                        edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-                        edgeSize = 10,
-                        insets = { left = 3, right = 3, top = 3, bottom = 3 }
-                    })
-                    bg:SetBackdropColor(0, 0, 0, 0)
+                    bg:SetBackdrop(BG_BACKDROP_PANEL_10)
+                    bg:SetBackdropColor(0, 0, 0, 0.8)
                     bg:SetPoint("TOPRIGHT", BG.MainFrame, "TOPRIGHT", -20, -20)
                     bg:SetSize(250, 250)
                     bg:SetFrameLevel(130)
@@ -1112,12 +1108,8 @@ function BG.HopeDaoChuUI()
                 local sbg, scroll, child
                 local bg = CreateFrame("Frame", nil, bt, "BackdropTemplate")
                 do
-                    bg:SetBackdrop({
-                        edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-                        edgeSize = 10,
-                        insets = { left = 3, right = 3, top = 3, bottom = 3 }
-                    })
-                    bg:SetBackdropColor(0, 0, 0, 0)
+                    bg:SetBackdrop(BG_BACKDROP_PANEL_10)
+                    bg:SetBackdropColor(0, 0, 0, 0.8)
                     bg:SetPoint("TOPRIGHT", BG.MainFrame, "TOPRIGHT", -20, -20)
                     bg:SetSize(250, 250)
                     bg:SetFrameLevel(130)

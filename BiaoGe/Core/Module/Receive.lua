@@ -32,11 +32,8 @@ function BG.ReceiveUI()
         -- 主界面
         BG.ReceiveMainFrame = CreateFrame("Frame", "BG.ReceiveFrame", UIParent, "BackdropTemplate")
         do
-            BG.ReceiveMainFrame:SetBackdrop({
-                edgeFile = "Interface/ChatFrame/ChatFrameBackground",
-                edgeSize = 2
-            })
-            BG.ReceiveMainFrame:SetBackdropColor(0, 0, 0, 0)
+            BG.ReceiveMainFrame:SetBackdrop(BG_BACKDROP_THIN)
+            BG.ReceiveMainFrame:SetBackdropColor(0, 0, 0, 0.8)
             BG.ReceiveMainFrame:SetBackdropBorderColor(r, g, b)
             BG.ReceiveMainFrame:SetPoint("CENTER")
             BG.ReceiveMainFrame:SetFrameLevel(100)

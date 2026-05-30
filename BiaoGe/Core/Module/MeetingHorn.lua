@@ -152,11 +152,8 @@ BG.Init2(function()
         local edit = MeetingHorn.MainPanel.Browser.Input
 
         local f = CreateFrame("Frame", nil, edit, "BackdropTemplate")
-        f:SetBackdrop({
-            edgeFile = "Interface/ChatFrame/ChatFrameBackground",
-            edgeSize = 2,
-        })
-        f:SetBackdropColor(0, 0, 0, 0)
+        f:SetBackdrop(BG_BACKDROP_THIN)
+        f:SetBackdropColor(0, 0, 0, 0.8)
         f:SetBackdropBorderColor(0, 0, 0, 1)
         f:SetSize(260, 50)
         f:SetPoint("BOTTOMRIGHT", edit, "TOPRIGHT", 0, 0)
@@ -460,11 +457,8 @@ BG.Init2(function()
         -- 背景框
         local f = CreateFrame("Frame", nil, BG.MeetingHorn.WhisperButton, "BackdropTemplate")
         do
-            f:SetBackdrop({
-                edgeFile = "Interface/ChatFrame/ChatFrameBackground",
-                edgeSize = 2,
-            })
-            f:SetBackdropColor(0, 0, 0, 0)
+            f:SetBackdrop(BG_BACKDROP_THIN)
+            f:SetBackdropColor(0, 0, 0, 0.8)
             f:SetBackdropBorderColor(0, 0, 0, 0.8)
             f.width = 200
             if BG.verLess2 then

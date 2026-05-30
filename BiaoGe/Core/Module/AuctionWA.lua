@@ -1475,6 +1475,9 @@ BG.Init(function()
         do
             local f = CreateFrame("Frame", nil, _G.BGA.AuctionMainFrame, "BackdropTemplate")
             f:SetBackdrop({
+                bgFile   = "Interface/Tooltips/UI-Tooltip-Background",
+                tile     = true,
+                tileSize = 16,
                 edgeFile = "Interface/ChatFrame/ChatFrameBackground",
                 edgeSize = aura.edgeSize,
             })
@@ -1573,6 +1576,9 @@ BG.Init(function()
             local f = CreateFrame("Frame", nil, AuctionFrame, "BackdropTemplate")
             do
                 f:SetBackdrop({
+                    bgFile   = "Interface/Tooltips/UI-Tooltip-Background",
+                    tile     = true,
+                    tileSize = 16,
                     edgeFile = "Interface/ChatFrame/ChatFrameBackground",
                     edgeSize = aura.edgeSize,
                 })

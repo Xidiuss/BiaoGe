@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed — Mover notification hyperlink regression
+
+- **`Core/BiaoGe.lua` — mover mode no longer blocks item links in notification frames** — the spec 003 mover fix enabled mouse capture directly on `BG.FrameLootMsg` / `BG.FrameTradeMsg` (`ScrollingMessageFrame`). That stopped mouse pass-through to world objects, but it also intercepted the native hyperlink hit-testing for item links in those message frames. Mover mode now leaves the scrolling message frames mouse-disabled for hyperlink interaction and uses a separate transparent `BiaoGeMoveHitFrame` behind each mover to handle empty-area drag/reset.
+
 ### Fixed — Action bar macros blocked by taint (spec 004)
 
 - **`Core/Compat.lua` block 16 + 14 caller files** — with BiaoGe enabled, **action-bar macros stopped working** (no keybind, no click), and disabling WIM/ElvUI revealed *"BiaoGe has been blocked from an action only available to the Blizzard UI."* Root cause (confirmed via `taint.log`): `Compat.lua` **overwrote the global `GetItemInfo`** with an insecure wrapper (it augments returns 12/13 with `classID`/`subClassID`, absent on WotLK 3.3.5). Blizzard's secure macro parser `CreateCanonicalActions` (ChatFrame.lua) **reads `GetItemInfo`** while resolving `/cast`, `/use`, `/castsequence` → the read taints the execution path → `CastSpellByName`/`RunMacro` blocked. Plain abilities went through `UseAction` (no macro parser) so they kept working — hence "spells work, macros don't". Fix: the global `GetItemInfo`/`GetItemInfoInstant` stay native (secure); the augmented wrapper is exposed as `ns.GetItemInfo`/`ns.GetItemInfoInstant` and the 14 modules that read `classID`/`subClassID` alias it locally. Verified in-game: `issecurevariable("GetItemInfo")` → `true`; macros work.

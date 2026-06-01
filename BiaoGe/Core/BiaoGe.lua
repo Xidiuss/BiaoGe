@@ -865,6 +865,12 @@ BG.Init(function()
                     f:SetBackdropBorderColor(0, 0, 0, 0)
                     f:SetMovable(false)
                     f:EnableMouse(false)
+                    if f.BiaoGeMoveHitFrame then
+                        f.BiaoGeMoveHitFrame:Hide()
+                        f.BiaoGeMoveHitFrame:EnableMouse(false)
+                        f.BiaoGeMoveHitFrame:SetScript("OnMouseUp", nil)
+                        f.BiaoGeMoveHitFrame:SetScript("OnMouseDown", nil)
+                    end
                     f:SetScript("OnUpdate", nil)
                     f.name:Hide()
                     f:Clear()
@@ -882,17 +888,30 @@ BG.Init(function()
                         f:SetBackdropColor(0, 0, 0, 0.65)
                         f:SetBackdropBorderColor(RGB("00FF00", 1))   -- zielony border = sygnał trybu przesuwania
                         f:SetMovable(true)
-                        f:EnableMouse(true)                          -- KLUCZOWE: bez tego ramka nie łapie myszy (drag nie działa, mysz przebija na świat)
-                        f:SetScript("OnMouseUp", function(self, enter)
-                            self:StopMovingOrSizing()
+                        f:EnableMouse(false)                         -- SMF hyperlinki działają tylko gdy pełny hit-test ramki nie przykrywa tekstu
+
+                        local hit = f.BiaoGeMoveHitFrame
+                        if not hit then
+                            hit = CreateFrame("Frame", nil, UIParent)
+                            f.BiaoGeMoveHitFrame = hit
+                        end
+                        hit:ClearAllPoints()
+                        hit:SetPoint("TOPLEFT", f, "TOPLEFT")
+                        hit:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT")
+                        hit:SetFrameStrata(f:GetFrameStrata())
+                        hit:SetFrameLevel(math.max((f:GetFrameLevel() or 1) - 5, 0))
+                        hit:EnableMouse(true)
+                        hit:Show()
+                        hit:SetScript("OnMouseUp", function(self, enter)
+                            f:StopMovingOrSizing()
                             if enter == "RightButton" then
                                 f:ClearAllPoints()
                                 f:SetPoint(unpack(f.homepoin))
                             end
                             BiaoGe.point[f:GetName()] = { f:GetPoint(1) }
                         end)
-                        f:SetScript("OnMouseDown", function(self)
-                            self:StartMoving()
+                        hit:SetScript("OnMouseDown", function(self)
+                            f:StartMoving()
                         end)
                         f.name:Show()
 

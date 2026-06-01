@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed — enUS locale terminology audit
+
+- **`Locales/enUS.lua` — corrected machine-translation artifacts and WoW terminology** — replaced mistranslated spell/item-name substitutions in UI copy (for example search, healing, modifier-key, raid, lockout, and Waylaid Supplies text), corrected WotLK raid labels, and fixed three `%s` placeholder mismatches in enUS locale strings.
+
 ### Fixed — Mover notification hyperlink regression
 
 - **`Core/BiaoGe.lua` — mover mode no longer blocks item links in notification frames** — the spec 003 mover fix enabled mouse capture directly on `BG.FrameLootMsg` / `BG.FrameTradeMsg` (`ScrollingMessageFrame`). That stopped mouse pass-through to world objects, but it also intercepted the native hyperlink hit-testing for item links in those message frames. Mover mode now leaves the scrolling message frames mouse-disabled for hyperlink interaction and uses a separate transparent `BiaoGeMoveHitFrame` behind each mover to handle empty-area drag/reset.

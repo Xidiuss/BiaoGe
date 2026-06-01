@@ -2117,14 +2117,12 @@ BG.Init(function()
                 else
                     if not mainFrame.testFrame then
                         local f = CreateFrame("Frame", nil, mainFrame, "BackdropTemplate")
-                        f:SetBackdrop({
-                            edgeFile = "Interface/ChatFrame/ChatFrameBackground",
-                            edgeSize = 1,
-                        })
-                        f:SetBackdropColor(0, 0, 0, 0)
+                        f:SetBackdrop(BG_BACKDROP_THIN)
+                        f:SetBackdropColor(0, 0, 0, 0.5)
                         f:SetBackdropBorderColor(0, 1, 0, 1)
                         f:SetAllPoints()
-                        f:SetFrameLevel(mainFrame:GetFrameLevel() - 1)
+                        f:SetFrameLevel(mainFrame:GetFrameLevel() + 10)
+                        f:EnableMouse(true)
                         mainFrame.testFrame = f
 
                         local t = f:CreateFontString()

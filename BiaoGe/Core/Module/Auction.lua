@@ -1,5 +1,7 @@
 if BG.IsBlackListPlayer then return end
 local AddonName, ns = ...
+-- spec 004 taint fix: ClassicAPI-shaped GetItemInfo via ns.* (global stays untainted)
+local GetItemInfo, GetItemInfoInstant = ns.GetItemInfo or GetItemInfo, ns.GetItemInfoInstant or GetItemInfoInstant
 
 local LibBG         = ns.LibBG
 local L             = ns.L
@@ -1427,8 +1429,8 @@ BG.Init(function()
             GameTooltip:SetPoint("TOPLEFT", self, "BOTTOMLEFT")
             GameTooltip:ClearLines()
             GameTooltip:AddLine(self:GetText(), 1, 1, 1, true)
-            GameTooltip:AddLine(AddTexture("LEFT") .. L["一键导入WA字符串"])
-            GameTooltip:AddLine(AddTexture("RIGHT") .. L["复制WA字符串"])
+            GameTooltip:AddLine(AddTexture("MOUSE_LEFT") .. L["一键导入WA字符串"])
+            GameTooltip:AddLine(AddTexture("MOUSE_RIGHT") .. L["复制WA字符串"])
             GameTooltip:AddLine(" ", 1, 0, 0, true)
             GameTooltip:AddDoubleLine(L["拍卖WA版本："], BGA.ver)
             GameTooltip:AddLine(L["全新的拍卖方式，不再通过传统的聊天栏来拍卖装备，而是使用新的UI来拍卖。"], 1, 0.82, 0, true)

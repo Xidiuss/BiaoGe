@@ -1,4 +1,6 @@
 local _, ns = ...
+-- spec 004 taint fix: ClassicAPI-shaped GetItemInfo via ns.* (global stays untainted)
+local GetItemInfo, GetItemInfoInstant = ns.GetItemInfo or GetItemInfo, ns.GetItemInfoInstant or GetItemInfoInstant
 
 local LibBG = ns.LibBG
 local L = ns.L

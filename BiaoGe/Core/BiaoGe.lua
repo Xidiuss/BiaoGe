@@ -1,5 +1,7 @@
 if BG.IsBlackListPlayer then return end
 local AddonName, ns = ...
+-- spec 004 taint fix: ClassicAPI-shaped GetItemInfo via ns.* (global stays untainted)
+local GetItemInfo, GetItemInfoInstant = ns.GetItemInfo or GetItemInfo, ns.GetItemInfoInstant or GetItemInfoInstant
 
 local LibBG = ns.LibBG
 local L = ns.L
@@ -159,6 +161,7 @@ BG.Init(function()
         local f = CreateFrame("Frame", nil, BG.MainFrame)
         f:SetPoint("TOPLEFT", BG.MainFrame, "TOPLEFT", 8, -1)
         f:SetHitRectInsets(0, 0, 0, 0)
+        f:EnableMouse(true)   -- bez tego OnEnter nie odpala → tooltip "Manual" się nie pokazywał
         local t = f:CreateFontString()
         t:SetPoint("CENTER")
         t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
@@ -832,7 +835,7 @@ BG.Init(function()
                 text:SetFont(BIAOGE_TEXT_FONT, 12, "OUTLINE")
                 text:SetAlpha(0.8)
                 text:SetPoint("BOTTOMLEFT", bt, "BOTTOMRIGHT", 5, 0)
-                text:SetText(AddTexture("RIGHT") .. L["通知框体可还原位置"])
+                text:SetText(AddTexture("MOUSE_RIGHT") .. L["通知框体可还原位置"])
 
                 bt:SetScript("OnEnter", function(self)
                     font:SetTextColor(RGB("FFFFFF"))
@@ -877,8 +880,9 @@ BG.Init(function()
                     for k, f in pairs(BG.Movetable) do
                         f:SetBackdrop(BG_BACKDROP_THIN)
                         f:SetBackdropColor(0, 0, 0, 0.65)
-                        f:SetBackdropBorderColor(0, 0, 0, 1)
+                        f:SetBackdropBorderColor(RGB("00FF00", 1))   -- zielony border = sygnał trybu przesuwania
                         f:SetMovable(true)
+                        f:EnableMouse(true)                          -- KLUCZOWE: bez tego ramka nie łapie myszy (drag nie działa, mysz przebija na świat)
                         f:SetScript("OnMouseUp", function(self, enter)
                             self:StopMovingOrSizing()
                             if enter == "RightButton" then
@@ -2050,12 +2054,19 @@ BG.Init(function()
             if BiaoGeTooltip2.NineSlice then BiaoGeTooltip2.NineSlice:SetAlpha(0) end
             if BiaoGeTooltip2.SetBackdrop then BiaoGeTooltip2:SetBackdrop(nil) end
 
+            -- spec 005 #4: ciemne WYPEŁNIENIE pod tekstem. Poprzedni kod dawał tylko
+            -- ramkę 1px (edgeFile bez bgFile → brak fill, KI § O) → z ElvUI tooltip był
+            -- bez tła. Tekstura na warstwie BACKGROUND samego tooltipa renderuje się POD
+            -- FontStringami i ElvUI nie zarządza doraźnymi teksturami (przeżywa skórkę ElvUI).
+            local bg = BiaoGeTooltip2:CreateTexture(nil, "BACKGROUND")
+            bg:SetAllPoints()
+            bg:SetColorTexture(unpack(color))
+
             local f = CreateFrame("Frame", nil, BiaoGeTooltip2, "BackdropTemplate")
             f:SetBackdrop({
                 edgeFile = "Interface/ChatFrame/ChatFrameBackground",
                 edgeSize = 1,
             })
-            f:SetBackdropColor(unpack(color))
             f:SetBackdropBorderColor(0, 0, 0, 1)
             f:SetAllPoints()
             f:SetFrameLevel(f:GetParent():GetFrameLevel())

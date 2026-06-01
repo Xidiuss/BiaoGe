@@ -136,12 +136,43 @@ BG.Init(function()
             "Interface/Icons/spell_holy_wordfortitude",         -- 戒律
             "Interface/Icons/spell_holy_guardianspirit",        -- 神圣
             "Interface/Icons/spell_shadow_shadowwordpain",      -- 暗影
-
-            "Interface/Icons/spell_monk_brewmaster_spec",       -- 武僧
-            "Interface/Icons/spell_monk_mistweaver_spec",
-            "Interface/Icons/spell_monk_windwalker_spec",
+            -- dodatkowe ZWERYFIKOWANE klasyczne ikony 3.3.5 (zast. usunięty blok numerycznych fileID)
+            "Interface/Icons/spell_holy_heal",
+            "Interface/Icons/spell_holy_flashheal",
+            "Interface/Icons/spell_holy_powerwordshield",
+            "Interface/Icons/spell_holy_renew",
+            "Interface/Icons/spell_holy_greaterheal",
+            "Interface/Icons/spell_nature_healingwavegreater",
+            "Interface/Icons/spell_nature_magicimmunity",
+            "Interface/Icons/spell_nature_earthshock",
+            "Interface/Icons/spell_nature_chainlightning",
+            "Interface/Icons/spell_nature_bloodlust",
+            "Interface/Icons/spell_frost_frostnova",
+            "Interface/Icons/spell_frost_frostarmor02",
+            "Interface/Icons/spell_frost_icestorm",
+            "Interface/Icons/spell_fire_fireball02",
+            "Interface/Icons/spell_fire_immolation",
+            "Interface/Icons/spell_fire_flameshock",
+            "Interface/Icons/spell_shadow_shadowbolt",
+            "Interface/Icons/spell_shadow_lifedrain02",
+            "Interface/Icons/spell_shadow_curseofsargeras",
+            "Interface/Icons/spell_arcane_blast",
+            "Interface/Icons/ability_warrior_charge",
+            "Interface/Icons/ability_warrior_sunder",
+            "Interface/Icons/ability_warrior_battleshout",
+            "Interface/Icons/ability_rogue_sinisterstrike",
+            "Interface/Icons/ability_rogue_eviscerate",
+            "Interface/Icons/ability_hunter_aimedshot",
+            "Interface/Icons/ability_druid_maul",
+            "Interface/Icons/ability_druid_demoralizingroar",
+            "Interface/Icons/inv_sword_27",
+            "Interface/Icons/inv_shield_06",
         }
         if BG.IsRetail then
+            -- Monk(MoP+)/DH/Evoker — klasy nieobecne w 3.3.5; ikony spec tylko dla retail
+            tinsert(BG.FilterClassItemDB.NewIcon, "Interface/Icons/spell_monk_brewmaster_spec")
+            tinsert(BG.FilterClassItemDB.NewIcon, "Interface/Icons/spell_monk_mistweaver_spec")
+            tinsert(BG.FilterClassItemDB.NewIcon, "Interface/Icons/spell_monk_windwalker_spec")
             tinsert(BG.FilterClassItemDB.NewIcon, "Interface/Icons/ability_evoker_powerswell")
             tinsert(BG.FilterClassItemDB.NewIcon, "Interface/Icons/ability_evoker_emeraldblossom")
             tinsert(BG.FilterClassItemDB.NewIcon, "Interface/Icons/ability_evoker_reversion_green")
@@ -150,24 +181,11 @@ BG.Init(function()
             tinsert(BG.FilterClassItemDB.NewIcon, "Interface/Icons/ability_monk_standingkick")
             tinsert(BG.FilterClassItemDB.NewIcon, "Interface/Icons/ability_monk_expelharm")
             tinsert(BG.FilterClassItemDB.NewIcon, "Interface/Icons/ability_monk_summontigerstatue")
-        else
-            local tbl = {
-                -- 额外
-                135957, 237480, 135372,
-                132369, 132337, 132362,
-                135993, 135891, 135959,
-                132180, 132293, 135826,
-                135790, 136023, 237579,
-                136078, 236162, 236168,
-                132304, 132298, 136177,
-                136183, 237558, 136228,
-                135841, 236217, 135735,
-                136200, 135936, 135940,
-            }
-            for _, icon in ipairs(tbl) do
-                tinsert(BG.FilterClassItemDB.NewIcon, icon)
-            end
         end
+        -- WotLK 3.3.5: USUNIĘTO blok numerycznych fileID (135957, ...) — fileID to feature
+        -- Legion 7.0+; w 3.3.5 SetTexture(number) renderuje czerwony kwadrat (KI § W).
+        -- 3 ikony Monk (MoP) przeniesione do gałęzi retail. Pozostają poprawne string-path
+        -- ikony klas WotLK. Set można rozszerzyć o dodatkowe ZWERYFIKOWANE ścieżki 3.3.5.
     end
     ------------------装备词缀------------------
     do

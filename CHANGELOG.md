@@ -9,6 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed — Action bar macros blocked by taint (spec 004)
+
+- **`Core/Compat.lua` block 16 + 14 caller files** — with BiaoGe enabled, **action-bar macros stopped working** (no keybind, no click), and disabling WIM/ElvUI revealed *"BiaoGe has been blocked from an action only available to the Blizzard UI."* Root cause (confirmed via `taint.log`): `Compat.lua` **overwrote the global `GetItemInfo`** with an insecure wrapper (it augments returns 12/13 with `classID`/`subClassID`, absent on WotLK 3.3.5). Blizzard's secure macro parser `CreateCanonicalActions` (ChatFrame.lua) **reads `GetItemInfo`** while resolving `/cast`, `/use`, `/castsequence` → the read taints the execution path → `CastSpellByName`/`RunMacro` blocked. Plain abilities went through `UseAction` (no macro parser) so they kept working — hence "spells work, macros don't". Fix: the global `GetItemInfo`/`GetItemInfoInstant` stay native (secure); the augmented wrapper is exposed as `ns.GetItemInfo`/`ns.GetItemInfoInstant` and the 14 modules that read `classID`/`subClassID` alias it locally. Verified in-game: `issecurevariable("GetItemInfo")` → `true`; macros work.
+
+### Fixed — Equipment filter panel & Gear Lib tooltip (spec 005)
+
+- **`Core/Module/FilterClassItem.lua` — "Custom Gear Filtering" panel auto-opened on load** — the panel frame is created visible (`CreateFrame` default) and built in an init function with no closing `Hide()`, so it appeared on every login/`/reload`. Added `Hide()` at the end of the builder (after height/`GetTop` layout, so layout math still runs on a shown frame).
+
+- **`Core/Module/FilterClassItem.lua` — nested ESC for the filter panels** — WotLK `CloseSpecialWindows` hides *all* `UISpecialFrames` at once, so ESC closed the panel together with the main window, and the "New filter program" subframe could not be closed at all. Replaced static registration with a dynamic stack that keeps only the top-most *visible* of `{AddFrame, filter panel, main window}` in `UISpecialFrames`, recomputed on each frame's `OnShow`/`OnHide` (the `OnHide` recompute is deferred one frame via `C_Timer.After(0)` so the re-added next frame isn't caught by the same close-all ESC pass). ESC now closes New filter program → filter panel → main window, one step per press.
+
+- **`Core/Module/ItemLib.lua` + `Core/BiaoGe.lua` — Gear Lib multi-source tooltip had no background** — the "multiple sources" hover tooltip (`BiaoGeTooltip2`) called `SetText` without `Show()`, so its backdrop was never drawn. Under ElvUI/NDui the dedicated skin branch also stripped the native backdrop and drew only a 1px edge (no `bgFile`). Added the missing `Show()` and a `BACKGROUND` fill texture on the tooltip itself (renders below the text and survives ElvUI's tooltip skinning).
+
+### Fixed — Equipment filter panel layout, frame-level clicks, movers, locale (spec 003)
+
+- **Frame-level click-through** — a duplicate `SetFrameLevel(600)` on the FULLSCREEN_DIALOG filter panel (called after its children existed) renormalized the panel's level downward, so the "+" / new-profile (`AddFrame`) controls created afterward landed *below* the parent and ignored clicks. Removed the redundant second call; later children regain a clean parent level and become clickable.
+
+- **Filter panel layout** — restored 5-column grid at 110px column width and widened the panel (560→720px) so full profile names fit without adding rows; opaque AddFrame dialog background; close/back buttons relabeled ("Back") with persistent gold borders.
+
+- **Movers (`BG.Move`)** — drag handles now `EnableMouse(true)` with a green border so they capture the mouse (previously the cursor passed through to the world and drag did not start). Mouse-button hint icons (`Media/icon/leftc.tga`, `rightc.tga`) wired into the Manual instructions, mover reset hint, and AuctionWA import/copy tooltips.
+
+- **Icon grid** — removed retail-only numeric fileID icons (Legion 7.0+, unsupported on 3.3.5, rendered as red squares) and the MoP-only Monk entries; restored ~30 verified classic 3.3.5 `Interface\Icons` paths. Icon-picker selection highlight enlarged to a 36px solid-blue border.
+
+- **Locale (enUS)** — corrected ~16 mislabeled equipment-filter strings (1H/2H, Guns, Crossbows, Wands, Thrown, Fist Weapons, Cloth, Mail, Plate, Shields, Librams, Idols, Totems, Sigils) and replaced retail `|A:NPE_RightClick|a` atlas markup in the Manual help text (enUS/zhCN/zhTW) with WotLK-compatible markup. Manual help tooltip now fires (`EnableMouse(true)` on its frame).
+
 ### Fixed — Panel backdrop fills (spec 002) + numpad reparent crash
 
 - **Backdrop fills across ~40 content panels (23 files)** — panels created with a `SetBackdrop({…})` table lacking a `bgFile` plus `SetBackdropColor(0,0,0,0)` rendered fully transparent on WotLK 3.3.5 (retail supplied a default fill; the WotLK engine does not). Replaced with the canonical `BG_BACKDROP_PANEL` / `BG_BACKDROP_PANEL_10` / `BG_BACKDROP_THIN` constants from `Core/function1.lua` plus `SetBackdropColor(0,0,0,0.8)`. Affected: auction start popup & ongoing-auction windows, trade-side panels (debt record, accounting preview, fast-give-money), DuiZhang chat/raid lists, gear/buyer/amount lists, History list + rename dialogs, Loot, Receive, Map, MeetingHorn, QuickAccounting, AuctionLog/MSG, Achievement, WhoHistory, WorldBossCD, YY rating panels, Handbook boss panels, Hope import, MoP loot popups, ad copy. Ornate `UI-DialogBox-Border` frames keep their border (bgFile added inline); WeakAura-style `AuctionWA` windows get a bgFile while preserving the user-configurable color. `Trade.tradeSeeFrame` state-color methods (`SetNormalColor`/`SetGreenColor`) updated so the dark fill persists across trade states.

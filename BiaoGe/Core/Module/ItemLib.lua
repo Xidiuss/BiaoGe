@@ -1,5 +1,7 @@
 if BG.IsBlackListPlayer then return end
 local AddonName, ns = ...
+-- spec 004 taint fix: ClassicAPI-shaped GetItemInfo via ns.* (global stays untainted)
+local GetItemInfo, GetItemInfoInstant = ns.GetItemInfo or GetItemInfo, ns.GetItemInfoInstant or GetItemInfoInstant
 
 local LibBG = ns.LibBG
 local L = ns.L
@@ -1228,6 +1230,7 @@ local function SetItemLib()
                         text = text .. v .. NN
                     end
                     BiaoGeTooltip2:SetText(text)
+                    BiaoGeTooltip2:Show()   -- spec 005: brakowało Show() → backdrop tooltipa nie był rysowany ("ramka bez tła")
                 elseif self.onenter and i ~= 3 then
                     BiaoGeTooltip2:SetOwner(self, "ANCHOR_TOPRIGHT", 0, 0)
                     BiaoGeTooltip2:ClearLines()

@@ -341,7 +341,7 @@ function BG.FilterClassItemUI()
         l:SetThickness(1.5)
 
         local buttons = {}
-        local width = pailie and f:GetWidth() or 80
+        local width = pailie and f:GetWidth() or 110
         local btheight = 25
         for i, v in ipairs(table) do
             local btName = "BiaoGeFilterBtn_" .. filterType .. "_" .. i
@@ -373,7 +373,10 @@ function BG.FilterClassItemUI()
             bt.Text:SetWidth(width)
             bt.Text:SetWordWrap(false)
             bt.key = v.name
-            bt:SetHitRectInsets(0, -bt.Text:GetWrappedWidth(), 0, 0)
+            -- hit rect ograniczony do szerokości kolumny (width), NIE do pełnej
+            -- (nieprzyciętej) szerokości tekstu — inaczej zakres klikalny skróconej
+            -- nazwy "One-ha..." sięgał pełnej "One-Handed Swords" i zachodził na sąsiada.
+            bt:SetHitRectInsets(0, -width, 0, 0)
             local _top = BG.FilterClassItemMainFrame:GetTop()
             local _bot = bt:GetBottom()
             if _top and _bot then
@@ -434,7 +437,7 @@ function BG.FilterClassItemUI()
         })
         BG.SetSafeBackground(f, 0, 0, 0, 0.65)
         f:SetBackdropBorderColor(GetClassRGB(nil, "player", 1))
-        f:SetWidth(560)
+        f:SetWidth(720)   -- 560→720: mieści 5 kolumn × 110px (pełne nazwy) bez zwiększania liczby rzędów (regresja wysokości spec 003/A)
         f:SetHeight(400)
         f:SetFrameStrata("FULLSCREEN_DIALOG")
         f:SetFrameLevel(600)
@@ -513,7 +516,10 @@ function BG.FilterClassItemUI()
         Buttons2:SetPoint("BOTTOMLEFT", offset, 35)
         Buttons2:SetSize(0, 30)
         Buttons2.type = 2
-        BG.FilterClassItemMainFrame:SetFrameLevel(600)
+        -- (usunięto redundantne SetFrameLevel(600) — main frame już ma 600 z głównego
+        -- bloku; powtórny SetFrameLevel po utworzeniu dzieci renormalizuje GetFrameLevel()
+        -- w dół, przez co ramki tworzone PÓŹNIEJ (AddButton "+", AddFrame) dostawały level
+        -- poniżej parenta i były nieklikalne. /fstack: "+" był na <5>, parent na <6>.)
         BG.FilterClassItemMainFrame.Buttons2 = Buttons2
         BG.CreateFilterClassButtons(Buttons2)
         tinsert(BG.filterClassButtons, Buttons2)
@@ -524,11 +530,14 @@ function BG.FilterClassItemUI()
     end
 
     -- 新建方案的框体
-    local f = CreateFrame("Frame", "BiaoGeFilterClassItemAddFrame", BG.FilterClassItemMainFrame)
+    local f = CreateFrame("Frame", "BiaoGeFilterClassItemAddFrame", BG.FilterClassItemMainFrame, "BackdropTemplate")
     do
         f:SetPoint("TOPLEFT", 10, -80)
         f:SetPoint("BOTTOMRIGHT", BG.FilterClassItemMainFrame.CloseButton, "BOTTOMRIGHT", 0, -3)
         f:SetFrameLevel(BG.FilterClassItemMainFrame:GetFrameLevel() + 20)
+        f:SetBackdrop(BG_BACKDROP_PANEL)
+        f:SetBackdropColor(0, 0, 0, 1)
+        BG.SetSafeBackground(f, 0, 0, 0, 1)   -- solidne nieprzezroczyste tło dialogu (bez prześwitów)
         f:EnableMouse(true)
         f:Hide()
         f:SetScript("OnMouseUp", function(self)
@@ -640,10 +649,10 @@ function BG.FilterClassItemUI()
             height = f:GetTop() - bt:GetBottom()
             tinsert(f.icons, bt)
 
-            local tex = bt:CreateTexture(nil, "BACKGROUND") -- 选中材质
-            tex:SetSize(31, 31)
+            local tex = bt:CreateTexture(nil, "BACKGROUND") -- 选中材质 (niebieska obramówka zaznaczenia)
+            tex:SetSize(36, 36)   -- 6px większe niż ikona 30x30 → widoczny 3px niebieski border za ikoną
             tex:SetPoint("CENTER", 0, 0)
-            tex:SetColorTexture(0, 0.55, 1, 0.28)
+            tex:SetColorTexture(0, 0.6, 1, 1)
             tex:Hide()
             bt.tex = tex
 
@@ -729,6 +738,15 @@ function BG.FilterClassItemUI()
             f:Hide()
             BG.PlaySound(1)
         end)
+
+        -- widoczne (złote) obramówki OK/Back — domyślny czarny border CreateButton
+        -- ginie na ciemnym tle dialogu; HookScript re-aplikuje po reset-on-leave
+        for _, _b in ipairs({ lastbt, bt }) do
+            _b:SetBackdropBorderColor(1, 0.82, 0, 1)
+            _b:HookScript("OnLeave", function(self)
+                self:SetBackdropBorderColor(1, 0.82, 0, 1)
+            end)
+        end
 
         f:SetScript("OnShow", function(self)
             BG.FilterClassItemMainFrame.resetButton:Hide()
@@ -1002,5 +1020,59 @@ function BG.FilterClassItemUI()
         BG.FilterClassItemMainFrame.resetButton:SetParent(F.frames[type])
         BG.FilterClassItemMainFrame.resetButton:SetFrameLevel(BG.FilterClassItemMainFrame:GetFrameLevel() + 10)
         BG.FilterClassItemMainFrame.Buttons2:SetParent(BG.FBMainFrame)
+    end
+
+    -- spec 005: panel auto-pokazywał się przy load (CreateFrame domyślnie widoczny,
+    -- brak Hide() po zbudowaniu) — ukryj; otwierany na żądanie (config/toggle).
+    BG.FilterClassItemMainFrame:Hide()
+
+    -- spec 005 #3: ZAGNIEŻDŻONY ESC. WotLK CloseSpecialWindows zamyka WSZYSTKIE ramki
+    -- z UISpecialFrames naraz → panel zamykał się razem z głównym oknem. Rozwiązanie:
+    -- w UISpecialFrames trzymaj tylko NAJWYŻSZĄ WIDOCZNĄ z {AddFrame, panel, main}.
+    -- Każdy ESC zamyka jedną; jej OnHide przelicza i wstawia następną w stosie:
+    --   ESC → New filter program (AddFrame) → ESC → Gear filtering (panel) → ESC → okno addonu.
+    -- IsVisible() (nie IsShown()): AddFrame jako dziecko panelu zachowuje IsShown=true
+    -- przy ukrytym rodzicu — IsVisible odróżnia faktyczną widoczność.
+    do
+        local escStack = {
+            "BiaoGeFilterClassItemAddFrame",   -- top
+            "BiaoGeFilterClassItemMainFrame",  -- middle
+            "BG.MainFrame",                    -- bottom
+        }
+        local function UpdateEscTarget()
+            for i = #UISpecialFrames, 1, -1 do
+                for _, n in ipairs(escStack) do
+                    if UISpecialFrames[i] == n then
+                        tremove(UISpecialFrames, i)
+                        break
+                    end
+                end
+            end
+            for _, n in ipairs(escStack) do
+                local fr = _G[n]
+                if fr and fr:IsVisible() then
+                    tinsert(UISpecialFrames, n)
+                    break
+                end
+            end
+        end
+        for _, n in ipairs(escStack) do
+            local fr = _G[n]
+            if fr then
+                -- OnShow: natychmiast (nie odpala wewnątrz pętli ESC) → nowa ramka od razu celem ESC.
+                fr:HookScript("OnShow", UpdateEscTarget)
+                -- OnHide: ODROCZ o 1 klatkę. OnHide odpala SYNCHRONICZNIE wewnątrz
+                -- CloseSpecialWindows (close-all, bez break) — natychmiastowe dodanie następnej
+                -- ramki zostałoby złapane przez TĘ SAMĄ pętlę i też zamknięte ("znów razem").
+                fr:HookScript("OnHide", function()
+                    if C_Timer and C_Timer.After then
+                        C_Timer.After(0, UpdateEscTarget)
+                    else
+                        UpdateEscTarget()
+                    end
+                end)
+            end
+        end
+        UpdateEscTarget()
     end
 end

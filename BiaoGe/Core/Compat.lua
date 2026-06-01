@@ -1,3 +1,5 @@
+local _, ns = ...
+
 -- 0a. SoundKit constants missing on some WotLK 3.3.5 clients.
 SOUNDKIT = SOUNDKIT or {}
 SOUNDKIT.U_CHAT_SCROLL_BUTTON = SOUNDKIT.U_CHAT_SCROLL_BUTTON or "uChatScrollButton"
@@ -885,7 +887,14 @@ do
     end
 
     if _GetItemInfo then
-        GetItemInfo = function(item)
+        -- TAINT FIX (spec 004): expose the retail-shaped wrapper as ns.GetItemInfo
+        -- instead of overwriting the global. Overwriting the global GetItemInfo from
+        -- insecure addon code taints it; the secure macro parser
+        -- (ChatFrame.lua CreateCanonicalActions) reads GetItemInfo while resolving
+        -- /cast, /use, /castsequence → tainted execution → "blocked from an action
+        -- only available to the Blizzard UI" (all action-bar macros dead).
+        -- Callers needing classID/subClassID alias `local GetItemInfo = ns.GetItemInfo`.
+        ns.GetItemInfo = function(item)
             local name, link, quality, level, minLevel, itemType, itemSubType,
                 stackCount, equipLoc, texture, sellPrice, classID, subClassID,
                 bindType, expacID, setID, isCraftingReagent = _GetItemInfo(item)
@@ -899,12 +908,14 @@ do
                 bindType, expacID, setID, isCraftingReagent
         end
         if C_Item then
-            C_Item.GetItemInfo = GetItemInfo
+            C_Item.GetItemInfo = ns.GetItemInfo
         end
     end
 
     if _GetItemInfoInstant then
-        GetItemInfoInstant = function(item)
+        -- TAINT FIX (spec 004): same rationale as GetItemInfo above — keep the global
+        -- native/ClassicAPI; expose the classID/subClassID-augmented form as ns.*.
+        ns.GetItemInfoInstant = function(item)
             local itemID = ExtractItemID(item)
             if not itemID then return end
 
@@ -916,7 +927,7 @@ do
                 texture, classID, subClassID
         end
         if C_Item then
-            C_Item.GetItemInfoInstant = GetItemInfoInstant
+            C_Item.GetItemInfoInstant = ns.GetItemInfoInstant
         end
     end
 end

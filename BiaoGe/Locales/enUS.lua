@@ -12,12 +12,12 @@ do --英语说明书
         "|cff00BFFF<Manual> (This plug-in supports MOP, CTM, WLK, Titan, and classic old world)",
         " ",
         "|cffFFFFFF-Open command: |r/BiaoGe or /GBG, or bind keys in game settings. Minimap icon: " .. "|TInterface\\AddOns\\BiaoGe\\Media\\icon\\icon:0|t",
-        "|cffFFFFFF-Quick operation: |r|A:NPE_RightClick:0:0|a input box clears content",
+        "|cffFFFFFF-Quick operation: |r|TInterface\\AddOns\\BiaoGe\\Media\\icon\\rightc:16:16|t input box clears content",
         "|cffFFFFFF-jump cursor:|r Press Tab and arrow keys to jump to the cursor, ALT/CTRL/SHIFT+arrow keys to jump to the next BOSS",
         "|cffFFFFFF-Automatic auction: |rALT+click the table/backpack/chat box equipment to open the auction panel (when you are the group leader or item distributor)",
         "|cffFFFFFF-Follow the equipment:|rALT+click the equipment. The team leader will be reminded when the equipment is auctioned (when you are a team member)",
-        "|cffFFFFFF-Auction countdown: |r|A:NPE_RightClick:0:0|a chat box equipment starts auction and counts down automatically (when you are the group leader or item distributor)",
-        "|cffFFFFFF-Quick accounting: |r|A:NPE_RightClick:0:0|a chat box opens when equipped (when you are a member)",
+        "|cffFFFFFF-Auction countdown: |r|TInterface\\AddOns\\BiaoGe\\Media\\icon\\rightc:16:16|t chat box equipment starts auction and counts down automatically (when you are the group leader or item distributor)",
+        "|cffFFFFFF-Quick accounting: |r|TInterface\\AddOns\\BiaoGe\\Media\\icon\\rightc:16:16|t chat box opens when equipped (when you are a member)",
         "|cffFFFFFF-View other optional equipment for the same part: |rCTRL+click on the equipment",
         "|cffFFFFFF-Swap grid: |rCTRL+ALT+click grid 1, then click grid 2 to exchange the entire contents of the two lines",
         "|cffFFFFFF-Character Overview:|rShortcut Command:/BGR",
@@ -335,6 +335,7 @@ do
     L["你可以在该模式，调整拍卖UI的位置，预览UI缩放和层级效果。只能在非团队状态下使用。"] = "In this mode, you can 'Improved Gouge' the position of the auction UI, preview the UI zoom and hierarchy effects. It can only be used in non-team state."
     L["退出调试模式"] = "Exiting Debug Mode"
     L["进入调试模式"] = "Enter Debug Mode"
+    L["这是拍卖框架\n你可以通过拖动来改变位置。"] = "This is the auction frame.\nDrag it to change its position."
     L["竞拍欢呼语"] = "Bidding Cheer"
     L["在竞价过程中，如果有人出价超过%s，有%s概率团长在团队频道发送一段随机的欢呼语，以活跃拍卖氛围。"] = "During the bidding process, if someone bids more than %s, there is a %s probability that the head of the team will send a random cheer in the team channel to liven up the auction atmosphere."
     L["需要使用非匿名模式，而且你是团长时才会生效。"] = "Requires non-anonymous mode and you are the team leader for this to work."
@@ -1424,7 +1425,7 @@ do
     L["不能新建"] = "Cannot create new"
     L["不能修改"] = "Cannot be modified"
     L["还需填写："] = "Still need to fill in:"
-    L["返回"] = "Returns"
+    L["返回"] = "Back"
     L["new"] = "new"
     L["方案数量已达上限，不能再新建方案"] = "The number of programs has reached the upper limit, can not be new programs"
     L["新建过滤方案"] = "New filter program"
@@ -1466,31 +1467,31 @@ do
     L["牧师-戒律/神圣"] = "Cleric - Ragnarok/Holy"
     L["牧师-暗影"] = "Cleric - Shadow"
     L["这里是指法系的副手，不是物理dps的副手武器"] = "This is a reference to lawful sidearms, not physical dps sidearms"
-    L["单手剑"] = "One-Handed Swords"
-    L["单手斧"] = "One-Handed Axes"
-    L["单手锤"] = "One-Handed Maces"
-    L["匕首"] = "Daggers."
-    L["拳套"] = "Scarshield Portal"
-    L["双手剑"] = "Two-Handed Swords"
-    L["双手斧"] = "Two-Handed Axes"
-    L["双手锤"] = "Two-Handed Maces"
+    L["单手剑"] = "1H Swords"
+    L["单手斧"] = "1H Axes"
+    L["单手锤"] = "1H Maces"
+    L["匕首"] = "Daggers"
+    L["拳套"] = "Fist Weapons"
+    L["双手剑"] = "2H Swords"
+    L["双手斧"] = "2H Axes"
+    L["双手锤"] = "2H Maces"
     L["长柄武器"] = "Polearms"
-    L["法杖"] = "Staves."
-    L["枪"] = "Polearms Staves"
-    L["弓"] = "Bows."
-    L["弩"] = "Hammertoe's Sacrifice."
-    L["魔杖"] = "Pillar Delving"
-    L["投掷武器"] = "Cooking Weapons"
-    L["布甲"] = "Ward of Zanzil Passive'."
-    L["全部布甲会被过滤（披风除外，否则本来合适你的披风也可能会被过滤）"] = "All 'Ward of Zanzil Passive' will be filtered (except cloaks, which may be filtered even if they fit you)."
-    L["皮甲"] = "Leather Armor"
-    L["锁甲"] = "Windfury Totem"
-    L["板甲"] = "Plate Mail"
-    L["盾牌"] = "Attract Rift Spawn"
-    L["圣契"] = "Sacred Covenants"
-    L["神像"] = "Energy Siphon"
-    L["图腾"] = "Shadow Wrath"
-    L["魔印"] = "Magic Seal"
+    L["法杖"] = "Staves"
+    L["枪"] = "Guns"
+    L["弓"] = "Bows"
+    L["弩"] = "Crossbows"
+    L["魔杖"] = "Wands"
+    L["投掷武器"] = "Thrown"
+    L["布甲"] = "Cloth"
+    L["全部布甲会被过滤（披风除外，否则本来合适你的披风也可能会被过滤）"] = "All Cloth will be filtered (except cloaks, which may be filtered even if they fit you)."
+    L["皮甲"] = "Leather"
+    L["锁甲"] = "Mail"
+    L["板甲"] = "Plate"
+    L["盾牌"] = "Shields"
+    L["圣契"] = "Librams"
+    L["神像"] = "Idols"
+    L["图腾"] = "Totems"
+    L["魔印"] = "Sigils"
     L["过滤职业限定的装备"] = "Filtering Professionally Limited Gear"
     L["过滤职业限定的装备"] = "Filtering profession-specific Gear"
     L["像套装兑换物这种有职业限定的装备，不适合你的会被过滤"] = "Gear that is limited to a specific profession, such as set exchanges, will be filtered if they don't fit you."

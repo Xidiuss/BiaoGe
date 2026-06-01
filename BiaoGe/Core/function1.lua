@@ -135,6 +135,10 @@ local function AddTexture(Texture, y, coord, width)
         return "|TInterface\\TUTORIALFRAME\\UI-TUTORIAL-FRAME-LEFTARROW:14:14|t"
     elseif Texture == "RIGHT" then
         return "|TInterface\\TUTORIALFRAME\\UI-TUTORIAL-FRAME-RIGHTARROW:14:14|t"
+    elseif Texture == "MOUSE_RIGHT" then  -- ikona myszki PPM (czerwony) — BiaoGe/Media/icon/rightc.tga
+        return "|TInterface\\AddOns\\BiaoGe\\Media\\icon\\rightc:16:16|t"
+    elseif Texture == "MOUSE_LEFT" then   -- ikona myszki LPM — BiaoGe/Media/icon/leftc.tga
+        return "|TInterface\\AddOns\\BiaoGe\\Media\\icon\\leftc:16:16|t"
     else
         tex = Texture
     end

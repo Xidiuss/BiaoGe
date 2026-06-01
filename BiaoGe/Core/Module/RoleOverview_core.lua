@@ -397,13 +397,13 @@ function BG.SetFBCD(self, position, click, refresh)
 
             local bt = CreateFrame("Button", nil, f)
             bt:SetSize(18, 18)
-            bt:SetNormalTexture("Interface\\Buttons\\UI-Minimap-ZoomInButton-Up")
-            bt:SetHighlightTexture("Interface\\Buttons\\UI-Minimap-ZoomInButton-Down")
+            bt:SetNormalTexture("Interface\\Buttons\\UI-RefreshButton")
+            bt:SetHighlightTexture("Interface\\Buttons\\UI-RefreshButton")
             bt:SetPoint("TOPRIGHT", -30, -5)
             bt:RegisterForClicks("AnyUp")
             bt:SetScript("OnClick", function(self)
                 BG.PlaySound(1)
-                BG.SetFBCD(nil, nil, true, true)
+                BG.SetFBCD(f.lastSelf, f.lastPosition, f.click, true)
             end)
 
             local bt = CreateFrame("Button", nil, f)
@@ -431,6 +431,11 @@ function BG.SetFBCD(self, position, click, refresh)
             else
                 f:SetPoint("BOTTOMRIGHT", self, "TOPRIGHT", 0, 0)
             end
+
+            local tex = f:CreateTexture(nil, "OVERLAY")
+            tex:SetSize(18, 18)
+            tex:SetPoint("TOPRIGHT", -5, -5)
+            tex:SetTexture("Interface\\Buttons\\UI-RefreshButton")
         end
     end
     CheckBiaoGeAccounts(f)
@@ -902,9 +907,10 @@ function BG.SetFBCD(self, position, click, refresh)
                             copyTbl[realmID][player] = BG.Copy(vv)
                             for i, v in ipairs(MONEYchoice_table) do
                                 if (not v.type or v.type == "currency") and not copyTbl[realmID][player][v.id] then -- 牌子，给空值设为0，主要是为了填补一些旧角色缺少某些新数据
+                                    local info = C_CurrencyInfo and C_CurrencyInfo.GetCurrencyInfo and C_CurrencyInfo.GetCurrencyInfo(v.id)
                                     copyTbl[realmID][player][v.id] = {
                                         count = 0,
-                                        tex = BG.verLess2 and v.tex or C_CurrencyInfo.GetCurrencyInfo(v.id).iconFileID,
+                                        tex = (info and info.iconFileID) or v.tex or "Interface\\Icons\\INV_Misc_QuestionMark",
                                         isNotKnow = true
                                     }
                                 elseif v.type == "money" and not copyTbl[realmID][player][v.id] then -- 金币

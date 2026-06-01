@@ -9,13 +9,13 @@ do --繁体说明书
     ns.instructionsText = {
         "|cff00BFFF< 說明書 >（本插件支持MOP、CTM、WLK、時光服、經典舊世）",
         " ",
-        "|cffFFFFFF-打開命令：|r/BiaoGe或/GBG，或遊戲設置裡綁定按鍵。小地圖圖標： " .. "|TInterface\\AddOns\\BiaoGe\\Media\\icon\\icon:0 |t",
-        "|cffFFFFFF-快捷操作：|r|TInterface\\AddOns\\BiaoGe\\Media\\icon\\rightc:16:16|t輸入框清除內容",
+        "|cffFFFFFF-打開命令：|r/BiaoGe或/GBG，或遊戲設置裡綁定按鍵。小地圖圖標： " .. "|TInterface\\AddOns\\BiaoGe\\Media\\icon\\icon.tga:16:16:0:0|t",
+        "|cffFFFFFF-快捷操作：|r|TInterface\\AddOns\\BiaoGe\\Media\\icon\\rightc.tga:16:16:0:0|t輸入框清除內容",
         "|cffFFFFFF-跳轉光標：|r按Tab、方向鍵跳轉光標，ALT/CTRL/SHIFT+方向鍵跳轉至下個BOSS",
         "|cffFFFFFF-自動拍賣：|rALT+點擊表格/背包/聊天框裝備，打開拍賣麵板（當你是團長或物品分配者時）",
         "|cffFFFFFF-關注裝備：|rALT+點擊裝備，團長拍賣此裝備時會提醒（當你是團員時）",
-        "|cffFFFFFF-拍賣倒數：|r|TInterface\\AddOns\\BiaoGe\\Media\\icon\\rightc:16:16|t聊天框裝備開始拍賣自動倒數（當你是團長或物品分配者時）",
-        "|cffFFFFFF-快速記賬：|r|TInterface\\AddOns\\BiaoGe\\Media\\icon\\rightc:16:16|t聊天框裝備時打開（當你是團員時）",
+        "|cffFFFFFF-拍賣倒數：|r|TInterface\\AddOns\\BiaoGe\\Media\\icon\\rightc.tga:16:16:0:0|t聊天框裝備開始拍賣自動倒數（當你是團長或物品分配者時）",
+        "|cffFFFFFF-快速記賬：|r|TInterface\\AddOns\\BiaoGe\\Media\\icon\\rightc.tga:16:16:0:0|t聊天框裝備時打開（當你是團員時）",
         "|cffFFFFFF-查看同部位其他可選裝備：|rCTRL+點擊裝備",
         "|cffFFFFFF-交換格子：|rCTRL+ALT+點擊格子1，再點格子2，可交換兩行全部內容",
         "|cffFFFFFF-角色總覽：|r快捷命令：/BGR",
@@ -65,7 +65,7 @@ do --繁体说明书
         tinsert(ns.VIPinstructionsText, i .. ". " .. text)
     end
     tinsert(ns.VIPinstructionsText, " ")
-    tinsert(ns.VIPinstructionsText, "|cff00ff00|A:NPE_LeftClick:0:0|a打開訂閱網站")
+    tinsert(ns.VIPinstructionsText, "|cff00ff00|TInterface\\AddOns\\BiaoGe\\Media\\icon\\leftc.tga:16:16:0:0|t打開訂閱網站")
 end
 
 do

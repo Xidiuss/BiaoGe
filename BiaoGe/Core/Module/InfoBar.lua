@@ -610,7 +610,7 @@ BG.Init(function()
         bt:SetHighlightFontObject(BG.FontWhite13)
         local _, playerClass = UnitClass("player")
         bt:SetText(BG.GetTalentIcon(playerClass, nil, 0) .. L["角色总览"])
-        -- bt:SetText("|A:classicon-" .. string.lower(select(2, UnitClass("player"))) .. ":0:0|a" .. L["角色总览"])
+        -- Retail class atlas omitted on WotLK.
         bt:SetWidth(bt:GetFontString():GetStringWidth())
         BG.ButtonRoleOverview = bt
         lastBt = bt

@@ -91,11 +91,110 @@ if not C_WowTokenPublic then
     }
 end
 
--- 9. C_CurrencyInfo — WotLK GetCurrencyInfo(index) not ID-based; return safe table.
+-- 9. C_CurrencyInfo — retail-shaped wrapper for WotLK currency data.
 if not C_CurrencyInfo then
     C_CurrencyInfo = {}
+end
+do
+    local nativeGetCurrencyInfo = C_CurrencyInfo.GetCurrencyInfo
+    local fallbackCurrency = {
+        [341] = { name = "Emblem of Frost", itemID = 49426 },
+        [301] = { name = "Emblem of Triumph", itemID = 47241 },
+        [221] = { name = "Emblem of Conquest", itemID = 45624 },
+        [102] = { name = "Emblem of Valor", itemID = 40753 },
+        [101] = { name = "Emblem of Heroism", itemID = 40752 },
+        [241] = { name = "Champion's Seal", itemID = 44990 },
+        [61] = { name = "Dalaran Jewelcrafter's Token", itemID = 41596 },
+        [81] = { name = "Dalaran Cooking Award", itemID = 43016 },
+        [161] = { name = "Stone Keeper's Shard", itemID = 43228 },
+        [1900] = { name = ARENA_POINTS or "Arena Points", iconFileID = "Interface\\PVPFrame\\PVP-ArenaPoints-Icon" },
+        [1901] = { name = HONOR_POINTS or "Honor Points", iconFileID = "Interface\\PVPFrame\\PVP-Currency-Honor" },
+        [42] = { name = "Badge of Justice", itemID = 29434 },
+        [2589] = { name = "Sidereal Essence" },
+        [2711] = { name = "Defiler's Scourgestone" },
+    }
+
+    local function GetCurrencyLinkID(index)
+        if GetCurrencyListLink then
+            local link = GetCurrencyListLink(index)
+            return link and tonumber(link:match("currency:(%d+)"))
+        end
+    end
+
+    local function GetFallbackIcon(info)
+        if info.iconFileID then return info.iconFileID end
+        if info.itemID and GetItemInfoInstant then
+            local icon = select(5, GetItemInfoInstant(info.itemID))
+            if icon then return icon end
+        end
+        return "Interface\\Icons\\INV_Misc_QuestionMark"
+    end
+
+    local function GetCurrencyListInfoByID(currencyID)
+        if not (GetCurrencyListSize and GetCurrencyListInfo) then return end
+        for i = 1, GetCurrencyListSize() do
+            local name, isHeader, _, _, _, count, field7, field8, field9 = GetCurrencyListInfo(i)
+            local icon = field9 ~= nil and field8 or field7
+            local itemID = field9 ~= nil and field9 or field8
+            if not isHeader then
+                local id = GetCurrencyLinkID(i)
+                local fallback = fallbackCurrency[currencyID]
+                if id == currencyID or itemID == currencyID or (fallback and fallback.itemID == itemID) then
+                    return {
+                        name = name,
+                        iconFileID = icon or (itemID and GetItemInfoInstant and select(5, GetItemInfoInstant(itemID))),
+                        quantity = count or 0,
+                        maxQuantity = 0,
+                        maxWeeklyQuantity = 0,
+                        quantityEarnedThisWeek = 0,
+                    }
+                end
+            end
+        end
+    end
+
     function C_CurrencyInfo.GetCurrencyInfo(currencyID)
-        return { name = "", iconFileID = 0, quantity = 0 }
+        currencyID = tonumber(currencyID)
+        if not currencyID then return end
+
+        if nativeGetCurrencyInfo then
+            local ok, info = pcall(nativeGetCurrencyInfo, currencyID)
+            if ok and type(info) == "table"
+                and info.name and info.name ~= ""
+                and info.iconFileID and info.iconFileID ~= 0 then
+                return info
+            end
+        end
+
+        local info = GetCurrencyListInfoByID(currencyID)
+        if info then return info end
+
+        local fallback = fallbackCurrency[currencyID]
+        if fallback then
+            local quantity = 0
+            if currencyID == 1900 and GetArenaCurrency then
+                quantity = GetArenaCurrency() or 0
+            elseif currencyID == 1901 and GetHonorCurrency then
+                quantity = GetHonorCurrency() or 0
+            end
+            return {
+                name = fallback.name,
+                iconFileID = GetFallbackIcon(fallback),
+                quantity = quantity,
+                maxQuantity = 0,
+                maxWeeklyQuantity = 0,
+                quantityEarnedThisWeek = 0,
+            }
+        end
+
+        return {
+            name = "Currency " .. currencyID,
+            iconFileID = "Interface\\Icons\\INV_Misc_QuestionMark",
+            quantity = 0,
+            maxQuantity = 0,
+            maxWeeklyQuantity = 0,
+            quantityEarnedThisWeek = 0,
+        }
     end
 end
 

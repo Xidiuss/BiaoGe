@@ -1121,10 +1121,10 @@ do
                     edit:Insert(self:GetText())
                 end
             end)
-            -- ←
+            -- Backspace
             local bt = CreateButton(true)
             bt:SetSize(35, f.button0:GetHeight())
-            bt:SetText("←")
+            bt:SetText("X")
             bt:SetPoint("TOPLEFT", f.button0, "BOTTOMLEFT", 0, -8)
             f.buttonJ = bt
             bt:SetScript("OnClick", function(self)

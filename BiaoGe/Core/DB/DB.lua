@@ -57,7 +57,7 @@ do
     BG.borderAlpha = .5
     BG.ver = "v" .. GetAddOnMetadata(AddonName, "Version")
     BG.BG = "|cff00BFFF<BiaoGe>|r "
-    BG.rareIcon = "|A:nameplates-icon-elite-silver:0:0|a"
+    BG.rareIcon = "|TInterface\\Icons\\INV_Misc_Head_Dragon_01:14:14:0:0|t"
     BG.iconTexCoord = { .07, .93, .07, .93 }
     BG.zaxiang = {} -- 杂项如果太多，则需要换列
     BG.zhuangbeiWidth = 140

@@ -905,11 +905,13 @@ GameTooltip:SetCurrencyByID(697)
         for i, v in ipairs(BG.MONEYall_table) do
             if not v.type and type(v.id) == "number" then
                 local info = C_CurrencyInfo.GetCurrencyInfo(v.id)
-                if info then
+                if info and info.name and info.name ~= "" then
                     BG.MONEYall_table[i].name = info.name
-                    BG.MONEYall_table[i].tex = info.iconFileID
+                    BG.MONEYall_table[i].tex = info.iconFileID or v.tex
                     BG.MONEYall_table[i].type = "currency"
                 end
+            elseif v.type == "item" and type(v.tex) == "number" and GetItemInfoInstant then
+                BG.MONEYall_table[i].tex = select(5, GetItemInfoInstant(v.id)) or v.tex
             end
         end
 
@@ -1878,11 +1880,11 @@ GameTooltip:SetCurrencyByID(697)
                         end
                         local tex = v.tex
                         tbl[v.id] = { count = count, tex = tex }
-                    elseif not BG.verLess2 then
+                    elseif C_CurrencyInfo and C_CurrencyInfo.GetCurrencyInfo then
                         local info = C_CurrencyInfo.GetCurrencyInfo(v.id)
                         if info then
-                            local count = info.quantity
-                            local tex = info.iconFileID
+                            local count = info.quantity or 0
+                            local tex = info.iconFileID or v.tex
                             tbl[v.id] = {
                                 count = count,
                                 tex = tex,

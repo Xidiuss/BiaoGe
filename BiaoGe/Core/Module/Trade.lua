@@ -40,7 +40,7 @@ BG.trade.playeritems = {}
 BG.TradeMyMoneyChange = {}
 
 local T = {}
-local goldTex = "|A:auctionhouse-icon-coin-gold:0:0|a"
+local goldTex = "|TInterface\\MoneyFrame\\UI-GoldIcon:14:14:2:0|t"
 
 BG.Init(function()
     -- 交易自动记录买家和金额
@@ -554,11 +554,11 @@ BG.Init(function()
             local tex = bt:CreateTexture()
             tex:SetPoint("CENTER")
             tex:SetSize(bt:GetWidth() + 10, bt:GetHeight() + 10)
-            tex:SetTexture("Interface\\TUTORIALFRAME\\UI-Tutorial-Frame-Exclaim")
+            tex:SetTexture("Interface\\FriendsFrame\\InformationIcon")
             local tex = bt:CreateTexture()
             tex:SetPoint("CENTER")
             tex:SetSize(bt:GetWidth() + 10, bt:GetHeight() + 10)
-            tex:SetTexture("Interface\\TUTORIALFRAME\\UI-Tutorial-Frame-Exclaim")
+            tex:SetTexture("Interface\\FriendsFrame\\InformationIcon-Highlight")
             bt:SetHighlightTexture(tex)
             bt:SetScript("OnEnter", function(self)
                 GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT")

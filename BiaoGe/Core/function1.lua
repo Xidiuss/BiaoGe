@@ -97,6 +97,15 @@ function BG.GetBossNumInfo(FB, bossNum)
 end
 
 ------------------在文本里插入材质图标------------------
+local function NormalizeBiaoGeIconTexture(tex)
+    if type(tex) == "string"
+        and tex:find("Interface\\AddOns\\BiaoGe\\Media\\icon\\", 1, true)
+        and not tex:match("%.[%a%d]+$") then
+        return tex .. ".tga"
+    end
+    return tex
+end
+
 local function AddTexture(Texture, y, coord, width)
     if not Texture then
         return ""
@@ -126,21 +135,21 @@ local function AddTexture(Texture, y, coord, width)
     elseif Texture == "QUEST" then -- 黄色感叹号
         tex = "Interface\\GossipFrame\\AvailableQuestIcon"
     elseif Texture == "VIP" then
-        return GetLocale() == "enUS" and "" or "|TInterface\\AddOns\\BiaoGe\\Media\\icon\\VIP:0:0:0:0:100:100:10:90:10:90|t"
+        return GetLocale() == "enUS" and "" or "|TInterface\\AddOns\\BiaoGe\\Media\\icon\\VIP.tga:0:0:0:0:100:100:10:90:10:90|t"
     elseif Texture == "BOX" then
-        tex = "Interface\\AddOns\\BiaoGe\\Media\\icon\\BOX"
+        tex = "Interface\\AddOns\\BiaoGe\\Media\\icon\\BOX.tga"
     elseif Texture == "DD" then
-        tex = "Interface\\AddOns\\BiaoGe\\Media\\icon\\DD"
+        tex = "Interface\\AddOns\\BiaoGe\\Media\\icon\\DD.tga"
     elseif Texture == "LEFT" then
         return "|TInterface\\TUTORIALFRAME\\UI-TUTORIAL-FRAME-LEFTARROW:14:14|t"
     elseif Texture == "RIGHT" then
         return "|TInterface\\TUTORIALFRAME\\UI-TUTORIAL-FRAME-RIGHTARROW:14:14|t"
     elseif Texture == "MOUSE_RIGHT" then  -- ikona myszki PPM (czerwony) — BiaoGe/Media/icon/rightc.tga
-        return "|TInterface\\AddOns\\BiaoGe\\Media\\icon\\rightc:16:16|t"
+        return "|TInterface\\AddOns\\BiaoGe\\Media\\icon\\rightc.tga:16:16:0:0|t"
     elseif Texture == "MOUSE_LEFT" then   -- ikona myszki LPM — BiaoGe/Media/icon/leftc.tga
-        return "|TInterface\\AddOns\\BiaoGe\\Media\\icon\\leftc:16:16|t"
+        return "|TInterface\\AddOns\\BiaoGe\\Media\\icon\\leftc.tga:16:16:0:0|t"
     else
-        tex = Texture
+        tex = NormalizeBiaoGeIconTexture(Texture)
     end
     width = width or 0
     return "|T" .. tex .. ":" .. width .. ":" .. width .. ":" .. x .. ":" .. y .. coord .. "|t"

@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed - WotLK icon rendering fallbacks
+
+- **`Core/Compat.lua` + RoleOverview** - added a WotLK-safe `C_CurrencyInfo.GetCurrencyInfo` wrapper backed by the 3.3.5 currency list APIs and WoW currency fallbacks, so Character Overview currency icons no longer collapse to `iconFileID = 0`.
+- **UI icon paths** - replaced unsupported retail atlas/texture references in Manual help, Auction Chat Log helper buttons, Gear Lib source filter, trade gold text, and the amount numpad backspace label with WotLK-compatible texture paths.
+
 ### Fixed — enUS locale terminology audit
 
 - **`Locales/enUS.lua` — corrected machine-translation artifacts and WoW terminology** — replaced mistranslated spell/item-name substitutions in UI copy (for example search, healing, modifier-key, raid, lockout, and Waylaid Supplies text), corrected WotLK raid labels, and fixed three `%s` placeholder mismatches in enUS locale strings.

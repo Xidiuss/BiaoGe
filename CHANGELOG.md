@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed — WotLK inline-texture `:0:0` artifacts + custom icon assets
+
+- **`Core/function1.lua`, `Core/DB/DB.lua` — inline textures with `:0:0` (zero height/width) caused icons to "float" in random screen positions.** On retail, `|Tpath:0:0:...|t` auto-sizes the texture to the font line height; **WoW 3.3.5 does not support that** and instead renders the texture at its `textureWidth:textureHeight` size at the offset position, so star/raid-target, currency, VIP, PvP-honor and specialization icons leaked out of tooltips into the world (visible on hover, tab switches, spec-icon hover). A previous pass only fixed the mouse icons from the screenshots; this completes the class: `AddTexture` and `BG.GetTalentIcon` now clamp a `0` dimension to `14`, and the remaining hard-coded `:0:0` markup (raid-target, VIP, honor) uses explicit dimensions. Confirmed against `!!!ClassicAPI`, which always emits explicit `:16:16`.
+- **`Core/function1.lua` — mouse-click instructions now show mouse icons instead of tutorial arrows.** `AddTexture("LEFT"/"RIGHT")` returned `UI-TUTORIAL-FRAME-*ARROW`; in 30+ "click does X" tooltips across the addon these now use the `leftc.tga`/`rightc.tga` mouse-button icons (3.3.5 has no built-in mouse-click texture).
+- **Custom icon assets replacing missing/ugly Blizzard textures** — added `Media/icon/{help-i,libi,scale,scale-}.tga` (64×64). `help-i.tga` replaces the Blizzard `InformationIcon` on every info "i" button (AuctionMSG, AuctionLog, Boss handbook, MeetingHorn, YY, Trade, WhoHistory); `libi.tga` is the Gear Lib loot-source icon (previously a map / a non-rendering refresh atlas); `scale.tga` / `scale-.tga` are the auction-chat frame enlarge/shrink buttons (previously `common-icon-zoom*` atlases that did not render). Removed a redundant decorative "Locate Gear" magnifier button (no click action) that duplicated the adjacent info button.
+
 ### Fixed - WotLK icon rendering fallbacks
 
 - **`Core/Compat.lua` + RoleOverview** - added a WotLK-safe `C_CurrencyInfo.GetCurrencyInfo` wrapper backed by the 3.3.5 currency list APIs and WoW currency fallbacks, so Character Overview currency icons no longer collapse to `iconFileID = 0`.

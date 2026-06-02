@@ -1215,7 +1215,8 @@ BG.Init(function()
             end)
 
             function BG.GetTalentIcon(class, talent, w)
-                w = w or 0
+                if not w or w == 0 then w = 14 end  -- WotLK 3.3.5 nie renderuje :0 (auto-line-height retail-only) → jawne wymiary
+
                 class = class and string.upper(class)
                 if talent and BG.talentIcon and BG.talentIcon[class] then
                     local a, b, c, d = unpack(BG.iconTexCoord)

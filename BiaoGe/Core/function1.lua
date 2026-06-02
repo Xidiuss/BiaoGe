@@ -130,20 +130,20 @@ local function AddTexture(Texture, y, coord, width)
         return "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES.blp:14:14:0:0:64:64:20:39:22:41|t"
     elseif Texture == 137000 or Texture == 136998 then -- 战场荣誉
         coord = ":100:100:10:60:0:55"
-        local t = "|T" .. Texture .. ":0:0:0:0" .. coord .. "|t"
+        local t = "|T" .. Texture .. ":16:16:0:0" .. coord .. "|t"  -- WotLK: jawne wymiary zamiast :0:0
         return t
     elseif Texture == "QUEST" then -- 黄色感叹号
         tex = "Interface\\GossipFrame\\AvailableQuestIcon"
     elseif Texture == "VIP" then
-        return GetLocale() == "enUS" and "" or "|TInterface\\AddOns\\BiaoGe\\Media\\icon\\VIP.tga:0:0:0:0:100:100:10:90:10:90|t"
+        return GetLocale() == "enUS" and "" or "|TInterface\\AddOns\\BiaoGe\\Media\\icon\\VIP.tga:16:16:0:0:100:100:10:90:10:90|t"
     elseif Texture == "BOX" then
         tex = "Interface\\AddOns\\BiaoGe\\Media\\icon\\BOX.tga"
     elseif Texture == "DD" then
         tex = "Interface\\AddOns\\BiaoGe\\Media\\icon\\DD.tga"
-    elseif Texture == "LEFT" then
-        return "|TInterface\\TUTORIALFRAME\\UI-TUTORIAL-FRAME-LEFTARROW:14:14|t"
-    elseif Texture == "RIGHT" then
-        return "|TInterface\\TUTORIALFRAME\\UI-TUTORIAL-FRAME-RIGHTARROW:14:14|t"
+    elseif Texture == "LEFT" then         -- klik LPM w instrukcjach (retail intent: ikona myszy, nie strzałka tutorialowa)
+        return "|TInterface\\AddOns\\BiaoGe\\Media\\icon\\leftc.tga:16:16:0:0|t"
+    elseif Texture == "RIGHT" then        -- klik PPM w instrukcjach
+        return "|TInterface\\AddOns\\BiaoGe\\Media\\icon\\rightc.tga:16:16:0:0|t"
     elseif Texture == "MOUSE_RIGHT" then  -- ikona myszki PPM (czerwony) — BiaoGe/Media/icon/rightc.tga
         return "|TInterface\\AddOns\\BiaoGe\\Media\\icon\\rightc.tga:16:16:0:0|t"
     elseif Texture == "MOUSE_LEFT" then   -- ikona myszki LPM — BiaoGe/Media/icon/leftc.tga
@@ -151,7 +151,7 @@ local function AddTexture(Texture, y, coord, width)
     else
         tex = NormalizeBiaoGeIconTexture(Texture)
     end
-    width = width or 0
+    if not width or width == 0 then width = 14 end  -- WotLK 3.3.5 nie renderuje :0 (auto-line-height retail-only) → jawne wymiary
     return "|T" .. tex .. ":" .. width .. ":" .. width .. ":" .. x .. ":" .. y .. coord .. "|t"
 end
 ns.AddTexture = AddTexture
@@ -555,14 +555,14 @@ end
 local tex = [[Interface\TargetingFrame\UI-RaidTargetingIcons]]
 local y = -3
 local RaidTargetingIcons = {
-    ["xingxing"] = { num = 1, tex = "|T" .. tex .. ":0:0:0:" .. y .. ":100:100:0:25:0:25" .. "|t" },
-    ["dabing"] = { num = 2, tex = "|T" .. tex .. ":0:0:0:" .. y .. ":100:100:25:50:0:25" .. "|t" },
-    ["ziling"] = { num = 3, tex = "|T" .. tex .. ":0:0:2:" .. y .. ":100:100:55:75:0:25" .. "|t" },
-    ["sanjiao"] = { num = 4, tex = "|T" .. tex .. ":0:0:0:" .. y .. ":100:100:75:100:0:25" .. "|t" },
-    ["yueliang"] = { num = 5, tex = "|T" .. tex .. ":0:0:0:" .. y .. ":100:100:0:25:25:50" .. "|t" },
-    ["fangkuai"] = { num = 6, tex = "|T" .. tex .. ":0:0:0:" .. y .. ":100:100:25:50:25:50" .. "|t" },
-    ["chacha"] = { num = 7, tex = "|T" .. tex .. ":0:0:0:" .. y .. ":100:100:50:75:25:50" .. "|t" },
-    ["kulou"] = { num = 8, tex = "|T" .. tex .. ":0:0:0:" .. y .. ":100:100:75:100:25:50" .. "|t" },
+    ["xingxing"] = { num = 1, tex = "|T" .. tex .. ":14:14:0:" .. y .. ":100:100:0:25:0:25" .. "|t" },
+    ["dabing"] = { num = 2, tex = "|T" .. tex .. ":14:14:0:" .. y .. ":100:100:25:50:0:25" .. "|t" },
+    ["ziling"] = { num = 3, tex = "|T" .. tex .. ":14:14:2:" .. y .. ":100:100:55:75:0:25" .. "|t" },
+    ["sanjiao"] = { num = 4, tex = "|T" .. tex .. ":14:14:0:" .. y .. ":100:100:75:100:0:25" .. "|t" },
+    ["yueliang"] = { num = 5, tex = "|T" .. tex .. ":14:14:0:" .. y .. ":100:100:0:25:25:50" .. "|t" },
+    ["fangkuai"] = { num = 6, tex = "|T" .. tex .. ":14:14:0:" .. y .. ":100:100:25:50:25:50" .. "|t" },
+    ["chacha"] = { num = 7, tex = "|T" .. tex .. ":14:14:0:" .. y .. ":100:100:50:75:25:50" .. "|t" },
+    ["kulou"] = { num = 8, tex = "|T" .. tex .. ":14:14:0:" .. y .. ":100:100:75:100:25:50" .. "|t" },
 }
 function BG.SetRaidTargetingIcons(type, name)
     if type then

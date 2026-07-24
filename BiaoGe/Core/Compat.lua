@@ -97,7 +97,7 @@ if not C_CurrencyInfo then
 end
 do
     local nativeGetCurrencyInfo = C_CurrencyInfo.GetCurrencyInfo
-    local getItemInfoInstant = GetItemInfoInstant or (C_Item and C_Item.GetItemInfoInstant)
+    local getItemInfoInstant = (C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant
     local fallbackCurrency = {
         [341] = { name = "Emblem of Frost", itemID = 49426 },
         [301] = { name = "Emblem of Triumph", itemID = 47241 },
@@ -942,9 +942,9 @@ end
 -- 16. Retail-shaped item info on WotLK. 3.3.5 GetItemInfo stops at sellPrice,
 --     while BiaoGe expects classID/subclassID in returns 12/13.
 do
-    local _GetItemInfo = GetItemInfo
-    local _GetItemInfoInstant = GetItemInfoInstant or (C_Item and C_Item.GetItemInfoInstant)
-    local _GetItemSubClassInfo = GetItemSubClassInfo or (C_Item and C_Item.GetItemSubClassInfo)
+    local _GetItemInfo = (C_Item and C_Item.GetItemInfo) or GetItemInfo
+    local _GetItemInfoInstant = (C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant
+    local _GetItemSubClassInfo = (C_Item and C_Item.GetItemSubClassInfo) or GetItemSubClassInfo
 
     local weaponEquipLoc = {
         INVTYPE_WEAPON = true,
@@ -1015,9 +1015,6 @@ do
                 stackCount, equipLoc, texture, sellPrice, classID, subClassID,
                 bindType, expacID, setID, isCraftingReagent
         end
-        if C_Item then
-            C_Item.GetItemInfo = ns.GetItemInfo
-        end
     end
 
     if _GetItemInfoInstant then
@@ -1035,9 +1032,6 @@ do
 
             return tonumber(_itemID) or itemID, itemType, itemSubType, equipLoc,
                 texture, classID, subClassID
-        end
-        if C_Item then
-            C_Item.GetItemInfoInstant = ns.GetItemInfoInstant
         end
     end
 end

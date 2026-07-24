@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed - !!!ClassicAPI 1.23 startup compatibility
 
+- **`Core/Compat.lua` C_Item isolation** - BiaoGe no longer replaces the shared `C_Item.GetItemInfo` and `C_Item.GetItemInfoInstant` methods. It consumes the richer !!!ClassicAPI 1.23 providers first and keeps 1.19 return-value augmentation inside the private `ns.*` wrappers.
 - **`Core/Compat.lua` + item API callers** - restored BiaoGe compatibility with !!!ClassicAPI 1.23, which no longer exports the legacy globals `GetItemInfoInstant`, `GetItemSubClassInfo`, and `GetItemInventorySlotInfo`. BiaoGe now sources item instant/subclass APIs from `C_Item.*` when the old globals are absent, keeps the secure native `GetItemInfo` global untouched, and aliases `GetItemInfoInstant` locally in all BiaoGe files that call it directly.
 - **`Core/Compat.lua` atlas registration** - custom BiaoGe atlases are registered into both the old `ATLAS_INFO_STORAGE` store and the new `C_Texture.AtlasData` store used by !!!ClassicAPI 1.23 `SetAtlas` / `NineSliceUtil`.
 

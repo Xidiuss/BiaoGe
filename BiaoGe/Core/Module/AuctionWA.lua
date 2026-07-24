@@ -1,6 +1,7 @@
 if BG.IsBlackListPlayer then return end
 local AddonName, ns = ...
 
+local GetItemInfoInstant = ns.GetItemInfoInstant or (C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant
 local pt = print
 
 --[[

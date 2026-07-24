@@ -97,6 +97,7 @@ if not C_CurrencyInfo then
 end
 do
     local nativeGetCurrencyInfo = C_CurrencyInfo.GetCurrencyInfo
+    local getItemInfoInstant = GetItemInfoInstant or (C_Item and C_Item.GetItemInfoInstant)
     local fallbackCurrency = {
         [341] = { name = "Emblem of Frost", itemID = 49426 },
         [301] = { name = "Emblem of Triumph", itemID = 47241 },
@@ -123,8 +124,8 @@ do
 
     local function GetFallbackIcon(info)
         if info.iconFileID then return info.iconFileID end
-        if info.itemID and GetItemInfoInstant then
-            local icon = select(5, GetItemInfoInstant(info.itemID))
+        if info.itemID and getItemInfoInstant then
+            local icon = select(5, getItemInfoInstant(info.itemID))
             if icon then return icon end
         end
         return "Interface\\Icons\\INV_Misc_QuestionMark"
@@ -142,7 +143,7 @@ do
                 if id == currencyID or itemID == currencyID or (fallback and fallback.itemID == itemID) then
                     return {
                         name = name,
-                        iconFileID = icon or (itemID and GetItemInfoInstant and select(5, GetItemInfoInstant(itemID))),
+                        iconFileID = icon or (itemID and getItemInfoInstant and select(5, getItemInfoInstant(itemID))),
                         quantity = count or 0,
                         maxQuantity = 0,
                         maxWeeklyQuantity = 0,
@@ -764,12 +765,19 @@ do
     -- LFG role indicator icons — WorldBossCD.lua:256-260
     -- Sprite sheet: Interface\LFGFrame\UI-LFG-ICON-ROLES (64x64)
     -- Top row (y 0-19): small round role indicators (Tank, Healer, DPS)
-    -- Write directly to ATLAS_INFO_STORAGE to avoid RegisterAtlasTable API
-    -- format differences across !!!ClassicAPI versions (v1.15 vs v1.16).
+    -- Write directly to both stores: ClassicAPI <=1.19 SetAtlas reads
+    -- ATLAS_INFO_STORAGE, while ClassicAPI 1.23 reads C_Texture.AtlasData.
+    local function RegisterBiaoGeAtlas(name, info)
+        ATLAS_INFO_STORAGE[name] = info
+        if C_Texture and C_Texture.AtlasData then
+            C_Texture.AtlasData[name] = info
+        end
+    end
+
     ATLAS_INFO_STORAGE = ATLAS_INFO_STORAGE or {}
-    ATLAS_INFO_STORAGE["ui-lfg-roleicon-tank"]   = { 19, 19, 0/64, 19/64, 0/64, 19/64, false, false, "Interface\\LFGFrame\\UI-LFG-ICON-ROLES" }
-    ATLAS_INFO_STORAGE["ui-lfg-roleicon-healer"] = { 19, 19, 20/64, 39/64, 0/64, 19/64, false, false, "Interface\\LFGFrame\\UI-LFG-ICON-ROLES" }
-    ATLAS_INFO_STORAGE["ui-lfg-roleicon-dps"]    = { 19, 19, 40/64, 59/64, 0/64, 19/64, false, false, "Interface\\LFGFrame\\UI-LFG-ICON-ROLES" }
+    RegisterBiaoGeAtlas("ui-lfg-roleicon-tank",   { 19, 19, 0/64, 19/64, 0/64, 19/64, false, false, "Interface\\LFGFrame\\UI-LFG-ICON-ROLES" })
+    RegisterBiaoGeAtlas("ui-lfg-roleicon-healer", { 19, 19, 20/64, 39/64, 0/64, 19/64, false, false, "Interface\\LFGFrame\\UI-LFG-ICON-ROLES" })
+    RegisterBiaoGeAtlas("ui-lfg-roleicon-dps",    { 19, 19, 40/64, 59/64, 0/64, 19/64, false, false, "Interface\\LFGFrame\\UI-LFG-ICON-ROLES" })
 end
 
 -- 8e. BackdropTemplate NineSlice UV fix for WotLK 3.3.5.
@@ -935,7 +943,8 @@ end
 --     while BiaoGe expects classID/subclassID in returns 12/13.
 do
     local _GetItemInfo = GetItemInfo
-    local _GetItemInfoInstant = GetItemInfoInstant
+    local _GetItemInfoInstant = GetItemInfoInstant or (C_Item and C_Item.GetItemInfoInstant)
+    local _GetItemSubClassInfo = GetItemSubClassInfo or (C_Item and C_Item.GetItemSubClassInfo)
 
     local weaponEquipLoc = {
         INVTYPE_WEAPON = true,
@@ -962,9 +971,9 @@ do
     end
 
     local function FindSubClassID(classID, itemSubType)
-        if not (classID and itemSubType and GetItemSubClassInfo) then return end
+        if not (classID and itemSubType and _GetItemSubClassInfo) then return end
         for subClassID = 0, 30 do
-            local subClassName = GetItemSubClassInfo(classID, subClassID)
+            local subClassName = _GetItemSubClassInfo(classID, subClassID)
             if subClassName == itemSubType then
                 return subClassID
             end
@@ -1018,9 +1027,11 @@ do
             local itemID = ExtractItemID(item)
             if not itemID then return end
 
-            local _itemID, itemType, itemSubType, equipLoc, texture =
+            local _itemID, itemType, itemSubType, equipLoc, texture, classID, subClassID =
                 _GetItemInfoInstant(item)
-            local classID, subClassID = DeriveClassIDs(itemType, itemSubType, equipLoc)
+            if not classID then
+                classID, subClassID = DeriveClassIDs(itemType, itemSubType, equipLoc)
+            end
 
             return tonumber(_itemID) or itemID, itemType, itemSubType, equipLoc,
                 texture, classID, subClassID

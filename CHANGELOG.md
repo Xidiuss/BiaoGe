@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed - !!!ClassicAPI 1.23 startup compatibility
+
+- **`Core/Compat.lua` + item API callers** - restored BiaoGe compatibility with !!!ClassicAPI 1.23, which no longer exports the legacy globals `GetItemInfoInstant`, `GetItemSubClassInfo`, and `GetItemInventorySlotInfo`. BiaoGe now sources item instant/subclass APIs from `C_Item.*` when the old globals are absent, keeps the secure native `GetItemInfo` global untouched, and aliases `GetItemInfoInstant` locally in all BiaoGe files that call it directly.
+- **`Core/Compat.lua` atlas registration** - custom BiaoGe atlases are registered into both the old `ATLAS_INFO_STORAGE` store and the new `C_Texture.AtlasData` store used by !!!ClassicAPI 1.23 `SetAtlas` / `NineSliceUtil`.
+
 ### Fixed — WotLK inline-texture `:0:0` artifacts + custom icon assets
 
 - **`Core/function1.lua`, `Core/DB/DB.lua` — inline textures with `:0:0` (zero height/width) caused icons to "float" in random screen positions.** On retail, `|Tpath:0:0:...|t` auto-sizes the texture to the font line height; **WoW 3.3.5 does not support that** and instead renders the texture at its `textureWidth:textureHeight` size at the offset position, so star/raid-target, currency, VIP, PvP-honor and specialization icons leaked out of tooltips into the world (visible on hover, tab switches, spec-icon hover). A previous pass only fixed the mouse icons from the screenshots; this completes the class: `AddTexture` and `BG.GetTalentIcon` now clamp a `0` dimension to `14`, and the remaining hard-coded `:0:0` markup (raid-target, VIP, honor) uses explicit dimensions. Confirmed against `!!!ClassicAPI`, which always emits explicit `:16:16`.

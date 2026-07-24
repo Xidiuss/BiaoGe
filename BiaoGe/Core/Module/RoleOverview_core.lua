@@ -16,6 +16,7 @@ local GetText_T = ns.GetText_T
 local AddTexture = ns.AddTexture
 local GetItemID = ns.GetItemID
 local Round = ns.Round
+local GetItemInfoInstant = ns.GetItemInfoInstant or (C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant
 
 local pt = print
 

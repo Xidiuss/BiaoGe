@@ -104,7 +104,7 @@ Some retail features are stubbed or unavailable:
 
 - **DressUp transmog** — `SetUseTransmogSkin`, `SetUseTransmogChoices`, `SetObeyHideInTransmogFlag` are no-ops (cosmetic only on retail)
 - **Specialization queries** — `GetSpecialization()` not available; spec is derived from talent tree distribution
-- **Async item/spell loading** — `Item:ContinueOnItemLoad()` fires synchronously; rare race conditions possible on fresh login
+- **Async loading depends on ClassicAPI version** — `Item:ContinueOnItemLoad()` is synchronous in ClassicAPI 1.19-1.21 and event-driven in 1.22+; spell loading remains limited
 - **`PlayerModel:SetPortraitZoom()`** — no-op
 - **`CreateMaskTexture()`** — no-op
 - **TTS voice** — `C_VoiceChat.GetTtsVoices()` returns empty (no engine support)

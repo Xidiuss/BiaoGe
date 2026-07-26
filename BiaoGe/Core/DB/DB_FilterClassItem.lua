@@ -330,28 +330,32 @@ BG.Init(function()
             }
         elseif BG.IsWLK or BG.IsCTM then
             if BG.IsWLK then
+                local function GetFilterStatName(name, fallback)
+                    local localized = L[name]
+                    return localized ~= name and localized or fallback
+                end
                 local f1 = ITEM_MOD_SPELL_DAMAGE_DONE:gsub("%%s", ".+")
                 local f2 = ITEM_MOD_SPELL_HEALING_DONE:gsub("%%s", ".+")
                 BG.FilterClassItemDB.ShuXing = {
-                    { name = "力量", value = "%+%C-" .. ITEM_MOD_STRENGTH_SHORT, name2 = ITEM_MOD_STRENGTH_SHORT },
-                    { name = "敏捷", value = "%+%C-" .. SPEC_FRAME_PRIMARY_STAT_AGILITY, name2 = SPEC_FRAME_PRIMARY_STAT_AGILITY },
-                    { name = "智力", value = "%+%C-" .. ITEM_MOD_INTELLECT_SHORT, name2 = ITEM_MOD_INTELLECT_SHORT },
-                    { name = "精神", value = "%+%C-" .. ITEM_MOD_SPIRIT_SHORT, name2 = ITEM_MOD_SPIRIT_SHORT },
-                    { name = "5回法力值", value = ITEM_MOD_MANA_REGENERATION },
-                    { name = "命中", value = HIT_LCD },
-                    { name = "急速", value = STAT_HASTE },
-                    { name = "暴击", value = STAT_CRITICAL_STRIKE },
-                    { name = "防御", value = STAT_CATEGORY_DEFENSE },
-                    { name = "招架", value = STAT_PARRY },
-                    { name = "躲闪", value = STAT_DODGE },
-                    { name = "格挡", value = ITEM_MOD_BLOCK_RATING_SHORT },
-                    { name = "格挡值", value = ITEM_MOD_BLOCK_VALUE_SHORT },
-                    { name = "攻击强度", value = ITEM_MOD_ATTACK_POWER_SHORT },
-                    { name = "精准", value = STAT_EXPERTISE },
-                    { name = "护甲穿透", value = ITEM_MOD_ARMOR_PENETRATION_RATING },
-                    { name = "近战攻击", value = MELEE_ATTACK },
-                    { name = "远程攻击", value = RANGED_ATTACK },
-                    { name = "法术强度", name2 = ITEM_MOD_SPELL_POWER_SHORT, value = { ITEM_MOD_SPELL_POWER_SHORT, f1, f2 } },
+                    { name = "力量", value = "%+%C-" .. ITEM_MOD_STRENGTH_SHORT, name2 = GetFilterStatName("力量", ITEM_MOD_STRENGTH_SHORT) },
+                    { name = "敏捷", value = "%+%C-" .. SPEC_FRAME_PRIMARY_STAT_AGILITY, name2 = GetFilterStatName("敏捷", SPEC_FRAME_PRIMARY_STAT_AGILITY) },
+                    { name = "智力", value = "%+%C-" .. ITEM_MOD_INTELLECT_SHORT, name2 = GetFilterStatName("智力", ITEM_MOD_INTELLECT_SHORT) },
+                    { name = "精神", value = "%+%C-" .. ITEM_MOD_SPIRIT_SHORT, name2 = GetFilterStatName("精神", ITEM_MOD_SPIRIT_SHORT) },
+                    { name = "5回法力值", value = ITEM_MOD_MANA_REGENERATION, name2 = GetFilterStatName("5回法力值", ITEM_MOD_MANA_REGENERATION) },
+                    { name = "命中", value = HIT_LCD, name2 = GetFilterStatName("命中", HIT_LCD) },
+                    { name = "急速", value = STAT_HASTE, name2 = GetFilterStatName("急速", STAT_HASTE) },
+                    { name = "暴击", value = STAT_CRITICAL_STRIKE, name2 = GetFilterStatName("暴击", STAT_CRITICAL_STRIKE) },
+                    { name = "防御", value = STAT_CATEGORY_DEFENSE, name2 = GetFilterStatName("防御", STAT_CATEGORY_DEFENSE) },
+                    { name = "招架", value = STAT_PARRY, name2 = GetFilterStatName("招架", STAT_PARRY) },
+                    { name = "躲闪", value = STAT_DODGE, name2 = GetFilterStatName("躲闪", STAT_DODGE) },
+                    { name = "格挡", value = ITEM_MOD_BLOCK_RATING_SHORT, name2 = GetFilterStatName("格挡", ITEM_MOD_BLOCK_RATING_SHORT) },
+                    { name = "格挡值", value = ITEM_MOD_BLOCK_VALUE_SHORT, name2 = GetFilterStatName("格挡值", ITEM_MOD_BLOCK_VALUE_SHORT) },
+                    { name = "攻击强度", value = ITEM_MOD_ATTACK_POWER_SHORT, name2 = GetFilterStatName("攻击强度", ITEM_MOD_ATTACK_POWER_SHORT) },
+                    { name = "精准", value = STAT_EXPERTISE, name2 = GetFilterStatName("精准", STAT_EXPERTISE) },
+                    { name = "护甲穿透", value = ITEM_MOD_ARMOR_PENETRATION_RATING, name2 = GetFilterStatName("护甲穿透", ITEM_MOD_ARMOR_PENETRATION_RATING) },
+                    { name = "近战攻击", value = MELEE_ATTACK, name2 = GetFilterStatName("近战攻击", MELEE_ATTACK) },
+                    { name = "远程攻击", value = RANGED_ATTACK, name2 = GetFilterStatName("远程攻击", RANGED_ATTACK) },
+                    { name = "法术强度", name2 = GetFilterStatName("法术强度", ITEM_MOD_SPELL_POWER_SHORT), value = { ITEM_MOD_SPELL_POWER_SHORT, f1, f2 } },
                 }
             else
                 BG.FilterClassItemDB.ShuXing = {

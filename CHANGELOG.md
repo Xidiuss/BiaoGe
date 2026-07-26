@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed - Custom Gear Filtering statistic labels
+
+- **`Core/DB/DB_FilterClassItem.lua` + `Locales/enUS.lua`** - all 19 WotLK statistic filters now use stable project-localized display labels instead of exposing server GlobalStrings that may be `?`, `5?`, format strings, or Chinese compatibility fallbacks on enUS clients. Persistent filter keys and localized item-tooltip matching patterns remain unchanged.
+
 ### Fixed - !!!ClassicAPI 1.23 startup compatibility
 
 - **`Core/Compat.lua` C_Item isolation** - BiaoGe no longer replaces the shared `C_Item.GetItemInfo` and `C_Item.GetItemInfoInstant` methods. It consumes the richer !!!ClassicAPI 1.23 providers first and keeps 1.19 return-value augmentation inside the private `ns.*` wrappers.

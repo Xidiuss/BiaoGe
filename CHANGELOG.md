@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed - Character Overview row separators
+
+- **`Core/Compat.lua`** - stopped replacing ClassicAPI's `CreateLine`, `SetStartPoint`, and `SetEndPoint` implementations. The compatibility wrapper bypassed ClassicAPI's endpoint state, so its later `SetThickness()` transform collapsed both thin separators and thick row highlights to near-zero width. ClassicAPI 1.19+ already supports BiaoGe's four-argument endpoints; its native geometry now serves Character Overview and the other 28 line consumers.
+
 ### Fixed - Tables edit focus and owed marker interaction
 
 - **`Core/FBUI/FBUIfunction.lua`** - Gear, Buyer, and Amount cells no longer toggle their EditBox enabled state during mouse gestures. ClassicAPI's EditBox `Enable()` clears focus, so the old unconditional `SetEnabled(true)` on every mouse-up immediately removed the caret and hid the Amount keypad; right-click `SetEnabled(false)` also disabled mouse input before the field could reliably receive mouse-up. Normal clicks now keep editing active, right-click clearing leaves the field reusable, and modifier shortcuts exit focus explicitly without disabling the cell.

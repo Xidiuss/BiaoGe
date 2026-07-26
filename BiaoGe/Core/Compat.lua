@@ -414,39 +414,8 @@ do
             if not idx.SetFixedFrameLevel     then idx.SetFixedFrameLevel     = function() end end
             if not idx.SetHyperlinksEnabled   then idx.SetHyperlinksEnabled   = function() end end
             if not idx.SetObeyStepOnDrag      then idx.SetObeyStepOnDrag      = function() end end
-            -- CreateLine: wrap (or install) with 4-arg-capable SetStartPoint/SetEndPoint.
-            -- WidgetAPI.lua installs per-instance methods on each line that only handle
-            -- the 3-arg form (point, x, y); BiaoGe uses the retail 4-arg form
-            -- (point, relativeFrame, x, y) in dozens of places.
-            local function wrapLine(line)
-                line.SetStartPoint = function(self, point, relOrX, xOff, yOff)
-                    if type(relOrX) == "number" then
-                        self:SetPoint(point, self:GetParent(), point, relOrX, xOff or 0)
-                    else
-                        self:SetPoint(point, relOrX, point, xOff or 0, yOff or 0)
-                    end
-                end
-                line.SetEndPoint = function(self, point, relOrX, xOff, yOff)
-                    if type(relOrX) == "number" then
-                        self:SetPoint(point, self:GetParent(), point, relOrX, xOff or 0)
-                    else
-                        self:SetPoint(point, relOrX, point, xOff or 0, yOff or 0)
-                    end
-                end
-                return line
-            end
-            if idx.CreateLine then
-                local origCL = idx.CreateLine
-                idx.CreateLine = function(self, ...)
-                    return wrapLine(origCL(self, ...))
-                end
-            else
-                idx.CreateLine = function(self, ...)
-                    local line = self:CreateTexture(...)
-                    line.IsLine = true
-                    return wrapLine(line)
-                end
-            end
+            -- ClassicAPI 1.19+ owns CreateLine endpoint state and geometry.
+            -- Replacing its per-line endpoint methods breaks UpdateTransform.
             -- SetScript wrapping for hyperlink events is intentionally absent here.
             -- Replacing idx.SetScript (shared by ALL frames of this type, including
             -- Clique's secure frames) from insecure addon code taints SetScript

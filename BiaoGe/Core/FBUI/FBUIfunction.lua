@@ -490,16 +490,11 @@ function BG.FBZhuangBeiUI(FB, t, b, bb, i, ii, scrollFrame)
     bt:SetScript("OnMouseDown", function(self, button)
         if button == "RightButton" and not IsAltKeyDown() and self ~= BG.Frame[FB]["boss" .. Maxb[FB] + 2]["zhuangbei" .. i] then
             UpdateCancelDelete(self, FB, BossNum(FB, b, t), i, self.type)
-            self:SetEnabled(false)
             self:SetText("")
             BG.Hide_AllHighlight()
-            if BG.lastfocus then
-                BG.lastfocus:ClearFocus()
-            end
             return
         end
         if IsAltKeyDown() and IsControlKeyDown() and self ~= BG.Frame[FB]["boss" .. Maxb[FB] + 2]["zhuangbei" .. i] then
-            self:SetEnabled(false)
             bt:ClearFocus()
             if BG.lastfocus then
                 BG.lastfocus:ClearFocus()
@@ -509,7 +504,6 @@ function BG.FBZhuangBeiUI(FB, t, b, bb, i, ii, scrollFrame)
         end
         if IsShiftKeyDown() then
             if self:GetText() ~= "" then
-                self:SetEnabled(false)
                 bt:ClearFocus()
                 BG.InsertLink(self:GetText())
             end
@@ -517,7 +511,6 @@ function BG.FBZhuangBeiUI(FB, t, b, bb, i, ii, scrollFrame)
         end
         if IsAltKeyDown() and self ~= BG.Frame[FB]["boss" .. Maxb[FB] + 1]["zhuangbei" .. i] and self ~= BG.Frame[FB]["boss" .. Maxb[FB] + 2]["zhuangbei" .. i] then
             if self:GetText() ~= "" then
-                self:SetEnabled(false)
                 bt:ClearFocus()
                 if BG.lastfocus then
                     BG.lastfocus:ClearFocus()
@@ -535,7 +528,7 @@ function BG.FBZhuangBeiUI(FB, t, b, bb, i, ii, scrollFrame)
         end
         if IsControlKeyDown() then
             if self:GetText() ~= "" then
-                self:SetEnabled(false)
+                self:ClearFocus()
                 BG.GoToItemLib(self)
             end
             return
@@ -553,12 +546,6 @@ function BG.FBZhuangBeiUI(FB, t, b, bb, i, ii, scrollFrame)
                 end
                 return
             end
-        end
-        if self ~= BG.Frame[FB]["boss" .. Maxb[FB] + 2]["zhuangbei" .. i] then
-            self:SetEnabled(true)
-        end
-        if enter == "RightButton" and self ~= BG.Frame[FB]["boss" .. Maxb[FB] + 2]["zhuangbei" .. i] then
-            self:SetEnabled(true)
         end
     end)
     -- 鼠标悬停在装备时
@@ -835,29 +822,16 @@ function BG.FBMaiJiaUI(FB, t, b, bb, i, ii)
     bt:SetScript("OnMouseDown", function(self, enter)
         if enter == "RightButton" and self ~= BG.Frame[FB]["boss" .. Maxb[FB] + 2]["maijia" .. i] then
             UpdateCancelDelete(self, FB, BossNum(FB, b, t), i, self.type)
-            self:SetEnabled(false)
             self:SetText("")
-            if BG.lastfocus then
-                BG.lastfocus:ClearFocus()
-            end
             return
         end
         if IsAltKeyDown() and IsControlKeyDown() and self ~= BG.Frame[FB]["boss" .. Maxb[FB] + 2]["maijia" .. i] then
-            self:SetEnabled(false)
             bt:ClearFocus()
             if BG.lastfocus then
                 BG.lastfocus:ClearFocus()
             end
             BG.JiaoHuan(bt, FB, b, i, t)
             return
-        end
-    end)
-    bt:SetScript("OnMouseUp", function(self, enter)
-        if self ~= BG.Frame[FB]["boss" .. Maxb[FB] + 2]["maijia" .. i] then
-            self:SetEnabled(true)
-        end
-        if enter == "RightButton" and self ~= BG.Frame[FB]["boss" .. Maxb[FB] + 2]["maijia" .. i] then
-            self:SetEnabled(true)
         end
     end)
     -- 悬停鼠标时
@@ -1086,27 +1060,16 @@ function BG.FBJinEUI(FB, t, b, bb, i, ii)
     bt:SetScript("OnMouseDown", function(self, enter)
         if enter == "RightButton" and self ~= BG.Frame[FB]["boss" .. Maxb[FB] + 2]["jine" .. i] then
             UpdateCancelDelete(self, FB, BossNum(FB, b, t), i, self.type)
-            BG.FrameHide(1)
-            self:SetEnabled(false)
             self:SetText("")
             return
         end
         if IsAltKeyDown() and IsControlKeyDown() and self ~= BG.Frame[FB]["boss" .. Maxb[FB] + 2]["jine" .. i] then
-            self:SetEnabled(false)
             bt:ClearFocus()
             if BG.lastfocus then
                 BG.lastfocus:ClearFocus()
             end
             BG.JiaoHuan(bt, FB, b, i, t)
             return
-        end
-    end)
-    bt:SetScript("OnMouseUp", function(self, enter)
-        if self ~= BG.Frame[FB]["boss" .. Maxb[FB] + 2]["jine" .. i] then
-            self:SetEnabled(true)
-        end
-        if enter == "RightButton" and self ~= BG.Frame[FB]["boss" .. Maxb[FB] + 2]["jine" .. i] then
-            self:SetEnabled(true)
         end
     end)
     -- 悬停鼠标时

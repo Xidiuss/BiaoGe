@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed - Tables edit focus and owed marker interaction
+
+- **`Core/FBUI/FBUIfunction.lua`** - Gear, Buyer, and Amount cells no longer toggle their EditBox enabled state during mouse gestures. ClassicAPI's EditBox `Enable()` clears focus, so the old unconditional `SetEnabled(true)` on every mouse-up immediately removed the caret and hid the Amount keypad; right-click `SetEnabled(false)` also disabled mouse input before the field could reliably receive mouse-up. Normal clicks now keep editing active, right-click clearing leaves the field reusable, and modifier shortcuts exit focus explicitly without disabling the cell.
+- **`Core/function2.lua`** - the visible `owed` marker now enables mouse input, allowing its Amount Owed tooltip and right-click clear action to run in Tables, History, and Receive.
+
 ### Fixed - Custom Gear Filtering statistic labels
 
 - **`Core/DB/DB_FilterClassItem.lua` + `Locales/enUS.lua`** - all 19 WotLK statistic filters now use stable project-localized display labels instead of exposing server GlobalStrings that may be `?`, `5?`, format strings, or Chinese compatibility fallbacks on enUS clients. Persistent filter keys and localized item-tooltip matching patterns remain unchanged.

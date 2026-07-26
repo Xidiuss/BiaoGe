@@ -38,23 +38,36 @@ foreach ($providerContract in @(
 }
 
 $corePath = Join-Path $Root "BiaoGe\Core"
-$createLineCount = 0
+$directCreateLineCount = 0
 Get-ChildItem -LiteralPath $corePath -Recurse -Filter "*.lua" | ForEach-Object {
     $text = Get-Content -LiteralPath $_.FullName -Raw -Encoding UTF8
-    $createLineCount += ([regex]::Matches($text, 'CreateLine\(\)')).Count
-}
-if ($createLineCount -ne 34) {
-    $failures += "Expected the reviewed census of 34 CreateLine consumers; found $createLineCount."
+    $directCreateLineCount += ([regex]::Matches($text, 'CreateLine\(\)')).Count
 }
 
-$roleLineCount = ([regex]::Matches($roleText, 'CreateLine\(\)')).Count
-if ($roleLineCount -ne 6) {
-    $failures += "Expected six Character Overview line consumers; found $roleLineCount."
+$roleProviderCallCount = ([regex]::Matches($roleText, 'f:CreateLine\(\)')).Count
+if ($roleProviderCallCount -ne 1) {
+    $failures += "Expected one provider call inside the Character Overview line tracker; found $roleProviderCallCount."
 }
 
 $thickBandCount = ([regex]::Matches($roleText, 'SetThickness\(height - 4\)')).Count
 if ($thickBandCount -ne 2) {
     $failures += "Expected two Character Overview thick row-band definitions; found $thickBandCount."
+}
+
+$trackedLineCount = ([regex]::Matches($roleText, 'local l = CreateOverviewLine\(\)')).Count
+if ($trackedLineCount -ne 6) {
+    $failures += "Expected all six Character Overview lines to use the local reflow tracker; found $trackedLineCount."
+}
+
+$logicalLineCount = $directCreateLineCount - $roleProviderCallCount + $trackedLineCount
+if ($logicalLineCount -ne 34) {
+    $failures += "Expected the reviewed census of 34 logical CreateLine consumers; found $logicalLineCount."
+}
+
+$finalSizeIndex = $roleText.LastIndexOf('f:SetSize(allWidth, 10 + height * n + 5)')
+$reflowIndex = $roleText.LastIndexOf('line:UpdateTransform()')
+if ($finalSizeIndex -lt 0 -or $reflowIndex -lt 0 -or $reflowIndex -lt $finalSizeIndex) {
+    $failures += "Character Overview must refresh tracked line transforms after assigning its final size."
 }
 
 if ($failures.Count -gt 0) {

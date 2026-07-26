@@ -351,12 +351,6 @@ function BG.SetFBCD(self, position, click, refresh)
     local FBCDwidth = 0
     -- 创建框体UI
     local f = CreateFrame("Frame", frameName, UIParent, "BackdropTemplate")
-    local overviewLines = {}
-    local function CreateOverviewLine()
-        local line = f:CreateLine()
-        tinsert(overviewLines, line)
-        return line
-    end
     do
         f:SetBackdrop(BG_BACKDROP_PANEL)
         f:SetBackdropColor(0, 0, 0, 0.65)
@@ -526,7 +520,7 @@ function BG.SetFBCD(self, position, click, refresh)
             FBCDTitle:SetWidth(totalwidth - 20) -- 标题设置宽度
         end
 
-        local l = CreateOverviewLine()
+        local l = f:CreateLine()
         l:SetColorTexture(RGB("808080", 1))
         l:SetStartPoint("TOPLEFT", BG.FBCDFrame, 5, -10 - height * n + line_height)
         l:SetEndPoint("TOPLEFT", BG.FBCDFrame, FBCDLineWidth, -10 - height * n + line_height)
@@ -779,7 +773,7 @@ function BG.SetFBCD(self, position, click, refresh)
             n = n + 1
 
             if BG.IsMe(realmID, player) then
-                local l = CreateOverviewLine()
+                local l = f:CreateLine()
                 l:SetStartPoint("TOPLEFT", 5, -10 - height * (n - 0.5) + line_height)
                 l:SetEndPoint("TOPLEFT", FBCDLineWidth, -10 - height * (n - 0.5) + line_height)
                 l:SetThickness(height - 4)
@@ -793,7 +787,7 @@ function BG.SetFBCD(self, position, click, refresh)
                 _r, _g, _b, h = .5, .5, .5, 1
             end
 
-            local l = CreateOverviewLine()
+            local l = f:CreateLine()
             l:SetStartPoint("TOPLEFT", 5, -10 - height * n + line_height)
             l:SetEndPoint("TOPLEFT", FBCDLineWidth, -10 - height * n + line_height)
             l:SetThickness(h)
@@ -990,7 +984,7 @@ function BG.SetFBCD(self, position, click, refresh)
             right = t
         end
         n = n + 1
-        local l = CreateOverviewLine()
+        local l = f:CreateLine()
         l:SetColorTexture(RGB("808080", 1))
         l:SetStartPoint("TOPLEFT", BG.FBCDFrame, leftOffset - 10, -10 - height * n + line_height)
         l:SetEndPoint("TOPLEFT", BG.FBCDFrame, moneyLineWidth, -10 - height * n + line_height)
@@ -1160,7 +1154,7 @@ function BG.SetFBCD(self, position, click, refresh)
             n = n + 1
 
             if BG.IsMe(realmID, player) then
-                local l = CreateOverviewLine()
+                local l = f:CreateLine()
                 l:SetStartPoint("TOPLEFT", BG.FBCDFrame, leftOffset - 10, -10 - height * (n - 0.5) + line_height)
                 l:SetEndPoint("TOPRIGHT", BG.FBCDFrame, -5, -10 - height * (n - 0.5) + line_height)
                 l:SetThickness(height - 4)
@@ -1173,7 +1167,7 @@ function BG.SetFBCD(self, position, click, refresh)
             else
                 _r, _g, _b, h = .5, .5, .5, 1
             end
-            local l = CreateOverviewLine()
+            local l = f:CreateLine()
             l:SetStartPoint("TOPLEFT", BG.FBCDFrame, leftOffset - 10, -10 - height * n + line_height)
             l:SetEndPoint("TOPLEFT", BG.FBCDFrame, moneyLineWidth, -10 - height * n + line_height)
             l:SetThickness(h)
@@ -1218,9 +1212,6 @@ function BG.SetFBCD(self, position, click, refresh)
         end
     end
     f:SetSize(allWidth, 10 + height * n + 5)
-    for _, line in ipairs(overviewLines) do
-        line:UpdateTransform()
-    end
 end
 
 function BG.UpdateFBCDFrameScale()

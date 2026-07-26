@@ -414,8 +414,30 @@ do
             if not idx.SetFixedFrameLevel     then idx.SetFixedFrameLevel     = function() end end
             if not idx.SetHyperlinksEnabled   then idx.SetHyperlinksEnabled   = function() end end
             if not idx.SetObeyStepOnDrag      then idx.SetObeyStepOnDrag      = function() end end
-            -- ClassicAPI 1.19+ owns CreateLine endpoint state and geometry.
-            -- Replacing its per-line endpoint methods breaks UpdateTransform.
+            -- ClassicAPI owns the endpoint/thickness state, but its texture-based
+            -- transform divides GetRect coordinates by GetEffectiveScale even
+            -- though both are already in the same logical coordinate space.
+            -- Every BiaoGe line is horizontal, so use native texture anchors:
+            -- they follow parent movement, resizing, and UI scale automatically.
+            local function RenderHorizontalLine(line)
+                local parent = line:GetParent()
+                if not (parent and line._StartAnchor and line._EndAnchor) then return end
+
+                line:ClearAllPoints()
+                line:SetPoint("LEFT", line._StartRelative or parent, line._StartAnchor,
+                    line._StartX or 0, line._StartY or 0)
+                line:SetPoint("RIGHT", line._EndRelative or parent, line._EndAnchor,
+                    line._EndX or 0, line._EndY or 0)
+                line:SetHeight(line._Thickness or 4)
+            end
+            if idx.CreateLine then
+                local origCreateLine = idx.CreateLine
+                idx.CreateLine = function(self, ...)
+                    local line = origCreateLine(self, ...)
+                    line.UpdateTransform = RenderHorizontalLine
+                    return line
+                end
+            end
             -- SetScript wrapping for hyperlink events is intentionally absent here.
             -- Replacing idx.SetScript (shared by ALL frames of this type, including
             -- Clique's secure frames) from insecure addon code taints SetScript
@@ -660,29 +682,7 @@ do
                 end
             end
 
-            -- 8b. SetStartPoint / SetEndPoint — ClassicAPI makes these no-ops;
-            --     override with real anchor logic. Support both signatures:
-            --     3-arg: (point, x, y)           — relative to parent
-            --     4-arg: (point, frame, x, y)    — relative to explicit frame
-            idx.SetStartPoint = function(self, point, relOrX, xOff, yOff)
-                if type(relOrX) == "number" then
-                    self:SetPoint(point, self:GetParent(), point, relOrX, xOff or 0)
-                else
-                    self:SetPoint(point, relOrX, point, xOff or 0, yOff or 0)
-                end
-            end
-            idx.SetEndPoint = function(self, point, relOrX, xOff, yOff)
-                if type(relOrX) == "number" then
-                    self:SetPoint(point, self:GetParent(), point, relOrX, xOff or 0)
-                else
-                    self:SetPoint(point, relOrX, point, xOff or 0, yOff or 0)
-                end
-            end
-            -- 8c. SetThickness — override ClassicAPI no-op
-            idx.SetThickness = function(self, h)
-                self:SetHeight(h or 1)
-            end
-            -- 8d. SetAtlas — ClassicAPI throws on missing atlas names (retail atlases
+            -- 8b. SetAtlas — ClassicAPI throws on missing atlas names (retail atlases
             --     don't exist in WotLK). Wrap to silently make texture invisible instead.
             local origSetTexture = idx.SetTexture
             local origSetVertexColor = idx.SetVertexColor

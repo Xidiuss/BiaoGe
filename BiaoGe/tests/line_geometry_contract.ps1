@@ -21,8 +21,40 @@ if ($compatText -match 'line\.SetEndPoint\s*=\s*function') {
     $failures += "Compat must not replace ClassicAPI line SetEndPoint."
 }
 
-if ($compatText -match 'idx\.CreateLine\s*=\s*function') {
-    $failures += "Compat must not wrap or replace the hard dependency's CreateLine."
+if ($compatText -match 'idx\.Set(StartPoint|EndPoint|Thickness)\s*=') {
+    $failures += "Compat must not install line methods globally on every Texture."
+}
+
+$rendererStart = $compatText.IndexOf("local function RenderHorizontalLine")
+if ($rendererStart -ge 0) {
+    $rendererEnd = $compatText.IndexOf("if idx.CreateLine then", $rendererStart)
+} else {
+    $rendererEnd = -1
+}
+if ($rendererEnd -lt 0) {
+    $failures += "Could not isolate the BiaoGe horizontal line renderer."
+    $rendererText = ""
+} else {
+    $rendererText = $compatText.Substring($rendererStart, $rendererEnd - $rendererStart)
+}
+
+foreach ($rendererContract in @(
+    'line:ClearAllPoints()',
+    'line:SetPoint("LEFT"',
+    'line:SetPoint("RIGHT"',
+    'line:SetHeight(line._Thickness or 4)'
+)) {
+    if (-not $rendererText.Contains($rendererContract)) {
+        $failures += "Horizontal line renderer is missing contract marker: $rendererContract"
+    }
+}
+
+if ($rendererText -match 'GetEffectiveScale|GetRect') {
+    $failures += "Horizontal line renderer must use native anchors without manual coordinate or scale normalization."
+}
+
+if ($compatText -notmatch 'line\.UpdateTransform\s*=\s*RenderHorizontalLine') {
+    $failures += "CreateLine must replace only the returned line's renderer."
 }
 
 foreach ($providerContract in @(
@@ -45,8 +77,8 @@ Get-ChildItem -LiteralPath $corePath -Recurse -Filter "*.lua" | ForEach-Object {
 }
 
 $roleProviderCallCount = ([regex]::Matches($roleText, 'f:CreateLine\(\)')).Count
-if ($roleProviderCallCount -ne 1) {
-    $failures += "Expected one provider call inside the Character Overview line tracker; found $roleProviderCallCount."
+if ($roleProviderCallCount -ne 6) {
+    $failures += "Expected six direct Character Overview line consumers; found $roleProviderCallCount."
 }
 
 $thickBandCount = ([regex]::Matches($roleText, 'SetThickness\(height - 4\)')).Count
@@ -54,20 +86,31 @@ if ($thickBandCount -ne 2) {
     $failures += "Expected two Character Overview thick row-band definitions; found $thickBandCount."
 }
 
-$trackedLineCount = ([regex]::Matches($roleText, 'local l = CreateOverviewLine\(\)')).Count
-if ($trackedLineCount -ne 6) {
-    $failures += "Expected all six Character Overview lines to use the local reflow tracker; found $trackedLineCount."
+if ($roleText -match 'CreateOverviewLine|overviewLines|line:UpdateTransform\(\)') {
+    $failures += "Character Overview must not retain the temporary manual line reflow."
 }
 
-$logicalLineCount = $directCreateLineCount - $roleProviderCallCount + $trackedLineCount
-if ($logicalLineCount -ne 34) {
-    $failures += "Expected the reviewed census of 34 logical CreateLine consumers; found $logicalLineCount."
+if ($directCreateLineCount -ne 34) {
+    $failures += "Expected the reviewed census of 34 CreateLine consumers; found $directCreateLineCount."
 }
 
-$finalSizeIndex = $roleText.LastIndexOf('f:SetSize(allWidth, 10 + height * n + 5)')
-$reflowIndex = $roleText.LastIndexOf('line:UpdateTransform()')
-if ($finalSizeIndex -lt 0 -or $reflowIndex -lt 0 -or $reflowIndex -lt $finalSizeIndex) {
-    $failures += "Character Overview must refresh tracked line transforms after assigning its final size."
+$startAnchors = [regex]::Matches(
+    ((Get-ChildItem -LiteralPath $corePath -Recurse -Filter "*.lua" |
+        ForEach-Object { Get-Content -LiteralPath $_.FullName -Raw -Encoding UTF8 }) -join "`n"),
+    'SetStartPoint\("([^"]+)"'
+)
+$endAnchors = [regex]::Matches(
+    ((Get-ChildItem -LiteralPath $corePath -Recurse -Filter "*.lua" |
+        ForEach-Object { Get-Content -LiteralPath $_.FullName -Raw -Encoding UTF8 }) -join "`n"),
+    'SetEndPoint\("([^"]+)"'
+)
+if ($startAnchors.Count -ne 34 -or $endAnchors.Count -ne 35) {
+    $failures += "Expected 34 start and 35 end calls in the horizontal endpoint census; found $($startAnchors.Count)/$($endAnchors.Count)."
+}
+foreach ($match in @($startAnchors) + @($endAnchors)) {
+    if ($match.Groups[1].Value -notmatch '(LEFT|RIGHT)$') {
+        $failures += "Non-horizontal endpoint anchor found: $($match.Groups[1].Value)"
+    }
 }
 
 if ($failures.Count -gt 0) {

@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed - Character Overview row separators
 
-- **`Core/Compat.lua` + `Core/Module/RoleOverview_core.lua`** - stopped replacing ClassicAPI's `CreateLine`, `SetStartPoint`, and `SetEndPoint` implementations. The compatibility wrapper bypassed ClassicAPI's endpoint state, so its later `SetThickness()` transform collapsed both thin separators and thick row highlights to near-zero width. ClassicAPI 1.19+ already supports BiaoGe's four-argument endpoints. Character Overview now also refreshes its six native line transforms after replacing the temporary `300x100` parent size with the final data-derived dimensions, preventing restored lines and row bands from remaining outside the panel.
+- **`Core/Compat.lua`** - corrected all 34 horizontal `CreateLine` consumers. ClassicAPI 1.19+ retains ownership of endpoint/thickness state, while BiaoGe replaces only its texture transform with native `LEFT`/`RIGHT` anchors. Runtime measurements at effective scales `0.5333` and `0.9` proved that ClassicAPI divided already-logical `GetRect()` dimensions by scale again, placing separators and row highlights outside their frames. Native anchors now follow movement, resizing, and UI scale automatically; obsolete global Texture line methods and the temporary Character Overview reflow were removed.
 
 ### Fixed - Tables edit focus and owed marker interaction
 

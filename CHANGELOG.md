@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed - Raid Member achievements
+
+- **`Core/Module/Achievement.lua`** - Raid Member and achievement/statistic
+  rows now explicitly receive mouse input, restoring their existing hover
+  tooltips, highlights, and achievement selection without adding a click
+  action to member rows.
+- **`Core/Module/Achievement.lua`** - raid comparison data now loads one
+  member at a time and associates the no-payload WotLK
+  `INSPECT_ACHIEVEMENT_READY` event with the stored active request. The
+  logged-in player is read locally, offline/out-of-range members are skipped,
+  and a timeout prevents Refresh Data from remaining disabled.
+- Achievement fractions now count loaded raid members other than the player,
+  producing `0/1` or `1/1` with one nearby member while preserving the
+  player's separate gold completion state.
+
 ### Fixed - Interface Options tab overflow
 
 - **`Core/Options.lua`** - the BiaoGe Interface Options tabs now share the

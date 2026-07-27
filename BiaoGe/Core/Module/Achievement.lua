@@ -32,7 +32,16 @@ BG.Init(function()
 
     local raidAchievement_AllPlayer = {}
     local raidAchievement_Total = {}
+    local raidAchievementPlayerName
+    local raidAchievementRequest = {
+        generation = 0,
+        index = 0,
+    }
     local UpdateChoose
+
+    local function IsCountedRaidMember(name)
+        return BG.raidRosterName[name] and name ~= raidAchievementPlayerName
+    end
 
     local db
     local db_stats
@@ -416,6 +425,7 @@ BG.Init(function()
 
         local function CreateRaidButton(i)
             local f = CreateFrame("Frame", nil, nil, "BackdropTemplate")
+            f:EnableMouse(true)
             f:SetBackdrop({
                 edgeFile = "Interface/ChatFrame/ChatFrameBackground",
                 edgeSize = 1,
@@ -671,6 +681,7 @@ BG.Init(function()
         end
 
         local f = CreateFrame("Frame", nil, child, "BackdropTemplate")
+        f:EnableMouse(true)
         f:SetSize(child:GetWidth(), 30)
         if i == 1 then
             f:SetPoint("TOPLEFT")
@@ -736,7 +747,7 @@ BG.Init(function()
             if IsInRaid(1) then
                 local num = 0
                 for name in pairs(raidAchievement_AllPlayer) do
-                    if BG.raidRosterName[name] then
+                    if IsCountedRaidMember(name) then
                         num = num + 1
                     end
                 end
@@ -801,7 +812,7 @@ BG.Init(function()
         for FB in pairs(db) do
             for _, ID in ipairs(db[FB]) do
                 for name in pairs(raidAchievement_AllPlayer) do
-                    if BG.raidRosterName[name] then
+                    if IsCountedRaidMember(name) then
                         for _ID, v in pairs(raidAchievement_AllPlayer[name]) do
                             if ID == _ID and v.completed then
                                 raidAchievement_Total[ID] = raidAchievement_Total[ID] or 0
@@ -815,37 +826,122 @@ BG.Init(function()
         end
     end
 
-    local function GetRaidAchievement()
+    local function SaveRaidAchievement(name, isPlayer)
+        local GetAchievementComparisonInfo = GetAchievementComparisonInfo
+        local GetComparisonStatistic = GetComparisonStatistic
+        local tbl = {}
+        local num = 1
+        if isPlayer then
+            raidAchievementPlayerName = name
+            GetAchievementComparisonInfo = GetAchievementInfo
+            GetComparisonStatistic = GetStatistic
+            num = 4
+        end
+        for FB in pairs(db) do
+            for _, ID in ipairs(db[FB]) do
+                local completed, month, day, year = select(num, GetAchievementComparisonInfo(ID))
+                if completed then
+                    tbl[ID] = {
+                        completed = completed,
+                        month = month,
+                        day = day,
+                        year = year
+                    }
+                end
+            end
+        end
+        for i in ipairs(db_stats) do
+            local ID = db_stats[i].ID
+            tbl["stats" .. ID] = GetComparisonStatistic(ID)
+        end
+        if tbl["stats" .. 334] ~= "--" then
+            raidAchievement_AllPlayer[name] = tbl
+        end
+    end
+
+    local function ClearRaidAchievementRequest()
+        raidAchievementRequest.name = nil
+        raidAchievementRequest.guid = nil
+        raidAchievementRequest.unit = nil
+    end
+
+    local GetRaidAchievement
+    local RequestNextRaidAchievement
+
+    local function FinishRaidAchievementRefresh(generation)
+        if generation ~= raidAchievementRequest.generation then return end
+        ClearRaidAchievementRequest()
+        ClearAchievementComparisonUnit()
+        UpdateAaidAchievement_Total()
+        BG.UpdateAchievementFrame()
+    end
+
+    local function ContinueRaidAchievementRefresh(generation)
+        ClearRaidAchievementRequest()
+        ClearAchievementComparisonUnit()
+        if raidAchievementRequest.restartPending then
+            raidAchievementRequest.restartPending = nil
+            GetRaidAchievement()
+        else
+            RequestNextRaidAchievement(generation)
+        end
+    end
+
+    RequestNextRaidAchievement = function(generation)
+        if generation ~= raidAchievementRequest.generation then return end
+        if not IsInRaid(1) then
+            FinishRaidAchievementRefresh(generation)
+            return
+        end
+
+        while true do
+            raidAchievementRequest.index = raidAchievementRequest.index + 1
+            local member = BG.raidRosterInfo[raidAchievementRequest.index]
+            if not member then
+                FinishRaidAchievementRefresh(generation)
+                return
+            end
+
+            local unit = "raid" .. member.unitIndex
+            if UnitIsUnit(unit, "player") then
+                SaveRaidAchievement(member.name, true)
+            elseif member.online and UnitExists(unit) and CanInspect(unit, false) then
+                local guid = UnitGUID(unit)
+                if guid then
+                    raidAchievementRequest.name = member.name
+                    raidAchievementRequest.guid = guid
+                    raidAchievementRequest.unit = unit
+                    ClearAchievementComparisonUnit()
+                    SetAchievementComparisonUnit(unit)
+
+                    BG.After(5, function()
+                        if generation ~= raidAchievementRequest.generation then return end
+                        if raidAchievementRequest.name ~= member.name then return end
+                        if raidAchievementRequest.guid ~= guid then return end
+                        ContinueRaidAchievementRefresh(generation)
+                    end)
+                    return
+                end
+            end
+        end
+    end
+
+    GetRaidAchievement = function()
         wipe(raidAchievement_Total)
         if IsInRaid(1) then
-            if not BG.AchievementUpdateFrame then
-                BG.AchievementUpdateFrame = CreateFrame("Frame")
+            if raidAchievementRequest.name then
+                raidAchievementRequest.restartPending = true
+                return
             end
-            local f = BG.AchievementUpdateFrame
-            f:SetScript("OnUpdate", nil)
-            f:Show()
-            f.t = 0
-            local i = 1
-            ClearAchievementComparisonUnit()
-            SetAchievementComparisonUnit("raid" .. i)
-            f:SetScript("OnUpdate", function(self, t)
-                self.t = self.t + t
-                if self.t >= 0.2 then
-                    self.t = 0
-                    i = i + 1
-                    if i <= GetNumGroupMembers() then
-                        ClearAchievementComparisonUnit()
-                        SetAchievementComparisonUnit("raid" .. i)
-                    else
-                        UpdateAaidAchievement_Total()
-                        BG.UpdateAchievementFrame()
-                        self:SetScript("OnUpdate", nil)
-                        self:Hide()
-                        return
-                    end
-                end
-            end)
+            raidAchievementRequest.generation = raidAchievementRequest.generation + 1
+            raidAchievementRequest.index = 0
+            raidAchievementRequest.restartPending = nil
+            RequestNextRaidAchievement(raidAchievementRequest.generation)
         else
+            raidAchievementRequest.generation = raidAchievementRequest.generation + 1
+            raidAchievementRequest.restartPending = nil
+            ClearRaidAchievementRequest()
+            ClearAchievementComparisonUnit()
             BG.UpdateAchievementFrame()
         end
     end
@@ -879,37 +975,12 @@ BG.Init(function()
     BG.RegisterEvent("INSPECT_ACHIEVEMENT_READY", function(self, event, guid)
         if achievementFunctions then achievementFunctions.selectedCategory = -1 end
         if not IsInRaid(1) then return end
-        local name = BG.raidRosterGUID[guid]
+        local name = raidAchievementRequest.name
         if not name then return end
-        local GetAchievementComparisonInfo = GetAchievementComparisonInfo
-        local GetComparisonStatistic = GetComparisonStatistic
-        local tbl = {}
-        local num = 1
-        if name == BG.playerName then
-            GetAchievementComparisonInfo = GetAchievementInfo
-            GetComparisonStatistic = GetStatistic
-            num = 4
-        end
-        for FB in pairs(db) do
-            for _, ID in ipairs(db[FB]) do
-                local completed, month, day, year = select(num, GetAchievementComparisonInfo(ID))
-                if completed then
-                    tbl[ID] = {
-                        completed = completed,
-                        month = month,
-                        day = day,
-                        year = year
-                    }
-                end
-            end
-        end
-        for i in ipairs(db_stats) do
-            local ID = db_stats[i].ID
-            tbl["stats" .. ID] = GetComparisonStatistic(ID)
-        end
-        if tbl["stats" .. 334] ~= "--" then
-            raidAchievement_AllPlayer[name] = tbl
-        end
+        if guid and raidAchievementRequest.guid and guid ~= raidAchievementRequest.guid then return end
+        local generation = raidAchievementRequest.generation
+        SaveRaidAchievement(name)
+        ContinueRaidAchievementRefresh(generation)
     end)
 
     local last

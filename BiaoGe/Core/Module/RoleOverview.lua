@@ -19,6 +19,7 @@ local Round = ns.Round
 local GetItemInfoInstant = ns.GetItemInfoInstant or (C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant
 
 local pt = print
+local enUS = GetLocale() == "enUS"
 
 local player = BG.playerName
 local realmID = GetRealmID()
@@ -511,24 +512,24 @@ function BG.RoleOverviewUI()
         elseif BG.IsWLK_80 then
             BG.FBCDall_table = {
                 --WLK
-                { name = "25RS", name2 = L["25红玉"], color = "FF4500", fbId = 724, num = 25, type = "fb" },
-                { name = "10RS", name2 = L["10红玉"], color = "FF4500", fbId = 724, num = 10, type = "fb" },
-                { name = "25ICC", name2 = L["25冰冠"], color = "9370DB", fbId = 631, num = 25, type = "fb" },
-                { name = "10ICC", name2 = L["10冰冠"], color = "9370DB", fbId = 631, num = 10, type = "fb" },
-                { name = "25TOC", name2 = L["25十字军"], color = "FF69B4", fbId = 649, num = 25, type = "fb" },
-                { name = "10TOC", name2 = L["10十字军"], color = "FF69B4", fbId = 649, num = 10, type = "fb" },
-                { name = "25OL", name2 = L["25黑龙"], color = "FFA500", fbId = 249, num = 25, type = "fb" },
-                { name = "10OL", name2 = L["10黑龙"], color = "FFA500", fbId = 249, num = 10, type = "fb" },
-                { name = "25ULD", name2 = L["25奥杜尔"], color = "00BFFF", fbId = 603, num = 25, type = "fb" },
-                { name = "10ULD", name2 = L["10奥杜尔"], color = "00BFFF", fbId = 603, num = 10, type = "fb" },
-                { name = "25NAXX", name2 = L["25纳克"], color = "32CD32", fbId = 533, num = 25, type = "fb" },
-                { name = "10NAXX", name2 = L["10纳克"], color = "32CD32", fbId = 533, num = 10, type = "fb" },
-                { name = "25EOE", name2 = L["25蓝龙"], color = "1E90FF", fbId = 616, num = 25, type = "fb" },
-                { name = "10EOE", name2 = L["10蓝龙"], color = "1E90FF", fbId = 616, num = 10, type = "fb" },
-                { name = "25OS", name2 = L["25黑曜石"], color = "8B4513", fbId = 615, num = 25, type = "fb" },
-                { name = "10OS", name2 = L["10黑曜石"], color = "8B4513", fbId = 615, num = 10, type = "fb" },
-                { name = "25VOA", name2 = L["25宝库"], color = "FFFF00", fbId = 624, num = 25, type = "fb" },
-                { name = "10VOA", name2 = L["10宝库"], color = "FFFF00", fbId = 624, num = 10, type = "fb" },
+                { name = "25RS", name2 = L["25红玉"], name3 = enUS and "[25]RS", color = "FF4500", fbId = 724, num = 25, type = "fb" },
+                { name = "10RS", name2 = L["10红玉"], name3 = enUS and "[10]RS", color = "FF4500", fbId = 724, num = 10, type = "fb" },
+                { name = "25ICC", name2 = L["25冰冠"], name3 = enUS and "[25]ICC", color = "9370DB", fbId = 631, num = 25, type = "fb" },
+                { name = "10ICC", name2 = L["10冰冠"], name3 = enUS and "[10]ICC", color = "9370DB", fbId = 631, num = 10, type = "fb" },
+                { name = "25TOC", name2 = L["25十字军"], name3 = enUS and "[25]TOGC", color = "FF69B4", fbId = 649, num = 25, type = "fb" },
+                { name = "10TOC", name2 = L["10十字军"], name3 = enUS and "[10]TOGC", color = "FF69B4", fbId = 649, num = 10, type = "fb" },
+                { name = "25OL", name2 = L["25黑龙"], name3 = enUS and "[25]ONY", color = "FFA500", fbId = 249, num = 25, type = "fb" },
+                { name = "10OL", name2 = L["10黑龙"], name3 = enUS and "[10]ONY", color = "FFA500", fbId = 249, num = 10, type = "fb" },
+                { name = "25ULD", name2 = L["25奥杜尔"], name3 = enUS and "[25]ULDUAR", color = "00BFFF", fbId = 603, num = 25, type = "fb" },
+                { name = "10ULD", name2 = L["10奥杜尔"], name3 = enUS and "[10]ULDUAR", color = "00BFFF", fbId = 603, num = 10, type = "fb" },
+                { name = "25NAXX", name2 = L["25纳克"], name3 = enUS and "[25]NAXX", color = "32CD32", fbId = 533, num = 25, type = "fb" },
+                { name = "10NAXX", name2 = L["10纳克"], name3 = enUS and "[10]NAXX", color = "32CD32", fbId = 533, num = 10, type = "fb" },
+                { name = "25EOE", name2 = L["25蓝龙"], name3 = enUS and "[25]EOE", color = "1E90FF", fbId = 616, num = 25, type = "fb" },
+                { name = "10EOE", name2 = L["10蓝龙"], name3 = enUS and "[10]EOE", color = "1E90FF", fbId = 616, num = 10, type = "fb" },
+                { name = "25OS", name2 = L["25黑曜石"], name3 = enUS and "[25]OS", color = "8B4513", fbId = 615, num = 25, type = "fb" },
+                { name = "10OS", name2 = L["10黑曜石"], name3 = enUS and "[10]OS", color = "8B4513", fbId = 615, num = 10, type = "fb" },
+                { name = "25VOA", name2 = L["25宝库"], name3 = enUS and "[25]VOA", color = "FFFF00", fbId = 624, num = 25, type = "fb" },
+                { name = "10VOA", name2 = L["10宝库"], name3 = enUS and "[10]VOA", color = "FFFF00", fbId = 624, num = 10, type = "fb" },
                 --TBC
                 { name = "SW", name2 = L["太阳井"], color = "D3D3D3", fbId = 580, num = 25, type = "fb" },
                 { name = "BT", name2 = L["黑庙"], color = "D3D3D3", fbId = 564, num = 25, type = "fb" },

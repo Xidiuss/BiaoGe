@@ -2550,7 +2550,7 @@ BG.Init(function()
             local function CreateFBCDbutton(n1, n2, collapse, tblName, dbName)
                 local right
                 local first
-                local buttonWidth = 100
+                local buttonWidth = 120
                 local buttonHeight = 25
                 local row = 1
                 tblName = tblName or "FBCDall_table"
@@ -2558,6 +2558,7 @@ BG.Init(function()
                 for i = n1, n2 do
                     local name = dbName == "FBCDchoice" and BG[tblName][i].name or BG[tblName][i].id
                     local name2 = BG[tblName][i].name2
+                    local name3 = BG[tblName][i].name3
                     local color = BG[tblName][i].color
                     local fbId = BG[tblName][i].fbId
                     local type = BG[tblName][i].type
@@ -2578,7 +2579,7 @@ BG.Init(function()
                     end
                     right = bt
                     bt.Text:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
-                    bt.Text:SetText("|cff" .. color .. (name2 or name):gsub("sod", "") .. RR)
+                    bt.Text:SetText("|cff" .. color .. (name3 or name2 or name):gsub("sod", "") .. RR)
                     bt.Text:SetWidth(buttonWidth - buttonHeight)
                     bt.Text:SetWordWrap(false)
                     if not BiaoGe[dbName][name] or BiaoGe[dbName][name] == 0 then
@@ -2782,10 +2783,10 @@ BG.Init(function()
                 lastFrame = CreateTitle(EXPANSION_NAME2, "00BFFF")
                 CreateFBCDbutton(1, x[startNum])
                 lastFrame = CreateTitle(EXPANSION_NAME1, "FF69B4")
-                CreateFBCDbutton(x[startNum] + 1, x[startNum + 1], true)
+                CreateFBCDbutton(x[startNum] + 1, x[startNum + 1])
                 startNum = startNum + 1
-                lastFrame = CreateTitle(LFG_LIST_LEGACY, "40c040")
-                CreateFBCDbutton(x[startNum] + 1, x[startNum + 1], true)
+                lastFrame = CreateTitle(LFG_LIST_LEGACY or L["经典旧世"], "40c040")
+                CreateFBCDbutton(x[startNum] + 1, x[startNum + 1])
                 startNum = startNum + 1
                 lastFrame = CreateTitle(QUESTS_LABEL, "FF8C00")
                 CreateFBCDbutton(x[startNum] + 1, x[startNum + 1])

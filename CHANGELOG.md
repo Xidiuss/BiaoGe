@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed - Character Overview instance choices
+
+- Added compact WotLK raid labels while retaining full localized names in tooltips.
+- Expanded the TBC and Legacy instance groups by default and restored a non-empty Legacy heading.
+
 ### Fixed - Character Overview row separators
 
 - **`Core/Compat.lua`** - corrected all 34 horizontal `CreateLine` consumers. ClassicAPI 1.19+ retains ownership of endpoint/thickness state, while BiaoGe replaces only its texture transform with native `LEFT`/`RIGHT` anchors. Runtime measurements at effective scales `0.5333` and `0.9` proved that ClassicAPI divided already-logical `GetRect()` dimensions by scale again, placing separators and row highlights outside their frames. Native anchors now follow movement, resizing, and UI scale automatically; obsolete global Texture line methods and the temporary Character Overview reflow were removed.

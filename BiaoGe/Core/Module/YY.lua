@@ -27,6 +27,54 @@ Y.maxSearchText = 300 -- 最多接受多少个评价详细
 Y.searchLastDay = 365 -- 接收最近多少天内的评价
 Y.searchCD = 10
 
+local function NormalizeNicknameForStorage(value)
+    return strtrim(tostring(value or ""))
+end
+
+local function NormalizeNickname(value)
+    local nickname = NormalizeNicknameForStorage(value)
+    if nickname == "" then return nil end
+    return strlower(nickname)
+end
+
+local function SameNickname(left, right)
+    local normalizedLeft = NormalizeNickname(left)
+    local normalizedRight = NormalizeNickname(right)
+    return normalizedLeft and normalizedRight and normalizedLeft == normalizedRight or false
+end
+
+local function EncodeNickname(value)
+    local nickname = NormalizeNicknameForStorage(value)
+    return (nickname:gsub(".", function(character)
+        return format("%02X", string.byte(character))
+    end))
+end
+
+local function DecodeNickname(value)
+    if type(value) ~= "string" or value == "" or strlen(value) % 2 ~= 0 or strfind(value, "[^%x]") then
+        return nil
+    end
+    return (value:gsub("%x%x", function(byte)
+        return string.char(tonumber(byte, 16))
+    end))
+end
+
+local function EncodeNicknameLink(value)
+    return "N" .. EncodeNickname(value)
+end
+
+local function DecodeNicknameLink(value)
+    if type(value) == "string" and strsub(value, 1, 1) == "N" then
+        return DecodeNickname(strsub(value, 2))
+    end
+    return value
+end
+
+local function AddYellowMessage(message)
+    local color = YELLOW_FONT_COLOR or {}
+    UIErrorsFrame:AddMessage(message, color.r or 1, color.g or 1, color.b or 0)
+end
+
 local blackList = {
     1460670757, -- 抖音https://www.douyin.com/user/self?from_tab_name=main&modal_id=7500185851373129000&showTab=like
     1457576818, -- ICC3000毛橙片
@@ -64,7 +112,7 @@ BG.Init(function()
             local value = BiaoGe.YYdb.all[i]
             if type(value) == "table" then
                 value.date = tonumber(value.date) or today
-                value.yy = value.yy and tostring(value.yy) or ""
+                value.yy = NormalizeNicknameForStorage(value.yy)
                 value.name = value.name and tostring(value.name) or ""
                 value.pingjia = tonumber(value.pingjia) or 2
                 value.edit = value.edit and tostring(value.edit) or ""
@@ -134,7 +182,7 @@ BG.Init(function()
             edit:SetSize(150, 20)
             edit:SetPoint("TOPLEFT", 110, -15 - height * n)
             edit:SetAutoFocus(false)
-            edit:SetNumeric(true)
+            edit:SetMaxBytes(64)
             edit:SetTextColor(1, 1, 0)
             tinsert(Y.textcolor_table, edit)
             BG.YYMainFrame.new.yy = edit
@@ -159,7 +207,7 @@ BG.Init(function()
                 end
                 if not BG.YYMainFrame.new.buttonesc:IsVisible() then
                     for key, value in pairs(BiaoGe.YYdb.all) do
-                        if self:GetText() == value.yy then
+                        if SameNickname(self:GetText(), value.yy) then
                             BG.YYMainFrame.new.yy.num = key
                             BG.YYMainFrame.new.buttonrepeat:Show()
                             return
@@ -371,7 +419,8 @@ BG.Init(function()
             function Y.SaveOnClick(self)
                 local new = BG.YYMainFrame.new
                 if not new.pingjia then return end
-                if new.yy:GetText() == "" or new.yy:GetText() == 0 then return end
+                local nickname = NormalizeNicknameForStorage(new.yy:GetText())
+                if not NormalizeNickname(nickname) then return end
                 if BG.YYMainFrame.new.yy.num then return end
 
                 if BG.YYMainFrame.my.all.lastNum then
@@ -379,7 +428,7 @@ BG.Init(function()
                 end
                 local a = {
                     date = tonumber(date("%y%m%d", GetServerTime())),
-                    yy = new.yy:GetText(),
+                    yy = nickname,
                     name = new.name:GetText(),
                     pingjia = new.pingjia,
                     edit = new.edit:GetText(),
@@ -663,6 +712,7 @@ BG.Init(function()
                 for i, _ in ipairs(title_table) do
                     local f = CreateFrame("Frame", nil, right or BG.YYMainFrame.my.all)
                     f:SetSize(title_table[i].width, 20)
+                    f:EnableMouse(true)
                     if i == 1 then
                         f:SetPoint("TOPLEFT", BG.YYMainFrame.my.all, "TOPLEFT", 10, -(n - 1) * height)
                         BG.YYMainFrame.my.all.button[ii] = f
@@ -758,7 +808,7 @@ BG.Init(function()
             f.Text:SetTextColor(RGB(BG.y2))
             f.Text:SetAllPoints()
             f.Text:SetWordWrap(false)
-            f.Text:SetText("YY: ")
+            f.Text:SetText(L["YY："])
             f.Text:SetTextColor(1, 1, 1)
             f.Text:SetJustifyH("RIGHT")
             -- YY输入框
@@ -766,7 +816,7 @@ BG.Init(function()
             edit:SetSize(120, 20)
             edit:SetPoint("LEFT", f, "RIGHT", 10, 2)
             edit:SetAutoFocus(false)
-            edit:SetNumeric(true)
+            edit:SetMaxBytes(64)
             edit.Text = f.Text
             BG.YYMainFrame.search.edit = edit
             edit:SetScript("OnEditFocusGained", function(self)
@@ -790,25 +840,26 @@ BG.Init(function()
             function Y.SearchButtonOnClick()
                 if not BG.YYchannelID then
                     local msg = format(L["查询正在初始化，请稍后再试"])
-                    UIErrorsFrame:AddMessage(msg, YELLOW_FONT_COLOR:GetRGB())
+                    AddYellowMessage(msg)
                     return
                 end
-                local yy = edit:GetText()
+                local nickname = NormalizeNicknameForStorage(edit:GetText())
                 if not BG.YYMainFrame.search.button:IsEnabled() then
                     if BG.YYMainFrame.search.cd <= 0 then
-                        local msg = format(L["正在查询中"], yy)
-                        UIErrorsFrame:AddMessage(msg, YELLOW_FONT_COLOR:GetRGB())
+                        local msg = format(L["正在查询中"], nickname)
+                        AddYellowMessage(msg)
                     else
                         local msg = format(L["查询CD中，剩余%s秒"], BG.YYMainFrame.search.cd)
-                        UIErrorsFrame:AddMessage(msg, YELLOW_FONT_COLOR:GetRGB())
+                        AddYellowMessage(msg)
                     end
                     return
-                elseif tonumber(yy) then
-                    local msg = format(L["正在查询YY%s的大众评价"], yy)
-                    UIErrorsFrame:AddMessage(msg, YELLOW_FONT_COLOR:GetRGB())
+                elseif NormalizeNickname(nickname) then
+                    local msg = format(L["正在查询YY%s的大众评价"], nickname)
+                    AddYellowMessage(msg)
                 else
                     return
                 end
+                local yy = nickname
                 local bt = BG.YYMainFrame.search.button
                 BG.ClearFocus()
                 BG.YYMainFrame.searchText = {
@@ -819,9 +870,9 @@ BG.Init(function()
                 }
                 local current_time = GetServerTime()                           -- 获取当前时间戳
                 local previous_time = current_time - (Y.searchLastDay * 86400) -- 计算XX天前的时间戳
-                local previous_date = date("%y%m%d", previous_time)            -- 格式化为日期字符串
+                local previous_date = tonumber(date("%y%m%d", previous_time)) or 0 -- 格式化为日期字符串
 
-                local sendtext = "yy" .. yy .. "," .. previous_date
+                local sendtext = "yyn" .. EncodeNickname(nickname) .. "," .. previous_date
                 SendChatMessage(sendtext, "CHANNEL", nil, BG.YYchannelID)
                 bt:SetEnabled(false)
                 edit:SetEnabled(false)
@@ -842,13 +893,13 @@ BG.Init(function()
                                 return (tonumber(a.date) or 0) > (tonumber(b.date) or 0)
                             end)
                             for i = #BiaoGe.YYdb.history, 1, -1 do
-                                if BiaoGe.YYdb.history[i].yy == BG.YYMainFrame.searchText.yy then
+                                if SameNickname(BiaoGe.YYdb.history[i].yy, BG.YYMainFrame.searchText.yy) then
                                     tremove(BiaoGe.YYdb.history, i)
                                 end
                             end
                             tinsert(BiaoGe.YYdb.history, 1, BG.YYMainFrame.searchText)
                             for i = #BiaoGe.YYdb.historyEmpty, 1, -1 do
-                                if tonumber(BiaoGe.YYdb.historyEmpty[i].yy) == tonumber(BG.YYMainFrame.searchText.yy) then
+                                if SameNickname(BiaoGe.YYdb.historyEmpty[i].yy, BG.YYMainFrame.searchText.yy) then
                                     tremove(BiaoGe.YYdb.historyEmpty, i)
                                 end
                             end
@@ -864,7 +915,7 @@ BG.Init(function()
                             LibBG:UIDropDownMenu_SetText(BG.YYMainFrame.DropDown,
                                 Y.DropDownColor(BiaoGe.YYdb.history[1], "yy"))
 
-                            local link = "|cffFFFF00|Hgarrmission:" .. "BiaoGeYY:" .. L["详细"] .. ":" .. yy ..
+                            local link = "|cffFFFF00|Hgarrmission:" .. "BiaoGeYY:" .. L["详细"] .. ":" .. EncodeNicknameLink(yy) ..
                                 "|h[" .. L["详细"] .. "]|h|r"
                             local msg = BG.STC_y1(format(L["查询成功：YY%s的评价一共%s个。%s"],
                                 yy, BG.YYMainFrame.searchText.sumpingjia[0], link))
@@ -887,12 +938,12 @@ BG.Init(function()
                         else
                             -- 把查询失败的YY放到空白库
                             for i = #BiaoGe.YYdb.history, 1, -1 do
-                                if BiaoGe.YYdb.history[i].yy == BG.YYMainFrame.searchText.yy then
+                                if SameNickname(BiaoGe.YYdb.history[i].yy, BG.YYMainFrame.searchText.yy) then
                                     tremove(BiaoGe.YYdb.history, i)
                                 end
                             end
                             for i = #BiaoGe.YYdb.historyEmpty, 1, -1 do
-                                if tonumber(BiaoGe.YYdb.historyEmpty[i].yy) == tonumber(BG.YYMainFrame.searchText.yy) then
+                                if SameNickname(BiaoGe.YYdb.historyEmpty[i].yy, BG.YYMainFrame.searchText.yy) then
                                     tremove(BiaoGe.YYdb.historyEmpty, i)
                                 end
                             end
@@ -1002,7 +1053,8 @@ BG.Init(function()
                     for i, v in ipairs(BiaoGe.YYdb.history) do
                         local info = LibBG:UIDropDownMenu_CreateInfo()
                         info.text = Y.DropDownColor(v)
-                        if v.yy == LibBG:UIDropDownMenu_GetText(BG.YYMainFrame.DropDown):match("|c........(%d+)|r") then
+                        if BG.YYMainFrame.historyNum == i
+                            and LibBG:UIDropDownMenu_GetText(BG.YYMainFrame.DropDown) ~= L["无"] then
                             info.checked = true
                         end
                         info.func = function()
@@ -1284,7 +1336,7 @@ BG.Init(function()
             local text = ""
             local yes
             for i, v in ipairs(BiaoGe.YYdb.history) do
-                if tonumber(cleanedYY) == tonumber(v.yy) then
+                if SameNickname(cleanedYY, v.yy) then
                     text = format("|cffFFFFFF-|cff00FF00%s|r/|cffFFFF00%s|r/|cffDC143C%s|r|r", v.sumpingjia[1], v.sumpingjia[2], v.sumpingjia[3])
                     yes = true
                     break
@@ -1292,7 +1344,7 @@ BG.Init(function()
             end
             if not yes then
                 for i, v in ipairs(BiaoGe.YYdb.historyEmpty) do
-                    if tonumber(cleanedYY) == tonumber(v.yy) then
+                    if SameNickname(cleanedYY, v.yy) then
                         text = format("|cffFFFFFF-|cff00FF00%s|r/|cffFFFF00%s|r/|cffDC143C%s|r|r", 0, 0, 0)
                         break
                     end
@@ -1304,7 +1356,7 @@ BG.Init(function()
         local function CreateLink(cleanedYY)
             local color = "00BFFF"
             for _, v in ipairs(BiaoGe.YYdb.all) do
-                if tonumber(cleanedYY) == tonumber(v.yy) then
+                if SameNickname(cleanedYY, v.yy) then
                     local tbl = { L["00FF00"], L["FFFF00"], L["DC143C"] }
                     color = tbl[v.pingjia]
                     break
@@ -1312,13 +1364,13 @@ BG.Init(function()
             end
             local blackText = ""
             for _, yy in ipairs(blackList) do
-                if yy == tonumber(cleanedYY) then
+                if tostring(yy) == NormalizeNicknameForStorage(cleanedYY) then
                     blackText = L["|cffff0000（该团长为毛团，请注意！如想举报更多毛团，请在抖音发视频后@苍穹之霜）|r"]
                     break
                 end
             end
 
-            return "|cff" .. color .. "|Hgarrmission:BiaoGeYY:YY:" .. cleanedYY ..
+            return "|cff" .. color .. "|Hgarrmission:BiaoGeYY:YY:" .. EncodeNicknameLink(cleanedYY) ..
                 "|h[YY:" .. cleanedYY .. PingJia(cleanedYY) .. "]" .. "|h|r" .. blackText
         end
         local function CreateLinkForGsub(yy)
@@ -1362,7 +1414,7 @@ BG.Init(function()
             BG.MainFrame:Show()
             BG.ClickTabButton(BG.YYMainFrameTabNum)
             for i, v in ipairs(BiaoGe.YYdb.history) do
-                if tonumber(yy) == tonumber(v.yy) then
+                if SameNickname(yy, v.yy) then
                     BG.YYMainFrame.historyNum = i
                     Y.SetResult(i)
                     LibBG:UIDropDownMenu_SetText(BG.YYMainFrame.DropDown, Y.DropDownColor(v, "yy"))
@@ -1374,11 +1426,11 @@ BG.Init(function()
 
         hooksecurefunc("SetItemRef", function(link, _, button)
             local arg1, arg2, arg3, arg4 = strsplit(":", link)
-            local yy = arg4
-            if arg2 == "BiaoGeYY" and arg3 == L["详细"] and arg4 then
+            local yy = DecodeNicknameLink(arg4)
+            if arg2 == "BiaoGeYY" and arg3 == L["详细"] and yy then
                 -- 点击[详细]后打开UI
                 BG.OnClickYYXiangXi(yy)
-            elseif arg2 == "BiaoGeYY" and arg3 == "YY" and arg4 then
+            elseif arg2 == "BiaoGeYY" and arg3 == "YY" and yy then
                 -- 点击YY链接后
                 if IsShiftKeyDown() or button == "RightButton" then
                     ChatEdit_ActivateChat(ChatEdit_ChooseBoxForSend())
@@ -1397,7 +1449,7 @@ BG.Init(function()
             GameTooltip:AddLine("|cff00BFFFYY:" .. yy .. RR)
             GameTooltip:AddLine(" ")
             for i, v in ipairs(BiaoGe.YYdb.history) do
-                if tonumber(yy) == tonumber(v.yy) then
+                if SameNickname(yy, v.yy) then
                     for ii, vv in ipairs(BiaoGe.YYdb.history[i].all) do
                         local date = vv.date
                         date = strsub(date, 1, 2) .. "/"
@@ -1420,10 +1472,10 @@ BG.Init(function()
         local function OnHyperlinkEnter(self, link)
             if not link then return end
             local arg1, arg2, arg3, arg4 = strsplit(":", link)
-            local yy = arg4
-            if arg2 == "BiaoGeYY" and arg3 == L["详细"] and arg4 then
+            local yy = DecodeNicknameLink(arg4)
+            if arg2 == "BiaoGeYY" and arg3 == L["详细"] and yy then
                 BG.OnEnterYYXiangXi(yy, self, "ANCHOR_TOPRIGHT")
-            elseif arg2 == "BiaoGeYY" and arg3 == "YY" and arg4 then
+            elseif arg2 == "BiaoGeYY" and arg3 == "YY" and yy then
                 GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT", 0, 0)
                 GameTooltip:ClearLines()
                 GameTooltip:AddLine("|cff00BFFFYY:" .. yy .. RR)
@@ -1434,7 +1486,7 @@ BG.Init(function()
                 -- 以往查询结果
                 local yes
                 for i, v in ipairs(BiaoGe.YYdb.history) do
-                    if tonumber(yy) == tonumber(v.yy) then
+                    if SameNickname(yy, v.yy) then
                         GameTooltip:AddLine(" ")
                         if v.date then
                             local date = v.date
@@ -1452,7 +1504,7 @@ BG.Init(function()
                 end
                 if not yes then
                     for i, v in ipairs(BiaoGe.YYdb.historyEmpty) do
-                        if tonumber(yy) == tonumber(v.yy) then
+                        if SameNickname(yy, v.yy) then
                             GameTooltip:AddLine(" ")
                             if v.date then
                                 local date = v.date
@@ -1471,7 +1523,7 @@ BG.Init(function()
                 -- 看看自己是否有评价过
                 local mypingjia = {}
                 for i, v in ipairs(BiaoGe.YYdb.all) do
-                    if tonumber(yy) == tonumber(v.yy) then
+                    if SameNickname(yy, v.yy) then
                         local date = v.date
                         date       = strsub(date, 1, 2) .. "/" .. strsub(date, 3, 4) .. "/" .. strsub(date, 5, 6)
                         tinsert(mypingjia, { name = L["日期："], name2 = date })
@@ -1554,11 +1606,10 @@ BG.Init(function()
                 local cleanedYY = strmatch(msg, "^%d+$")
                 if cleanedYY and strlen(cleanedYY) >= 4 then
                     for k, v in pairs(BiaoGe.YYdb.LeaderYY) do
-                        if tonumber(v.yy) == tonumber(cleanedYY) and v.name == playerName then
+                        if SameNickname(v.yy, cleanedYY) and v.name == playerName then
                             return
                         end
                     end
-                    cleanedYY = tonumber(cleanedYY)
                     Y.SaveLeaderYY(cleanedYY, playerName)
                     return
                 end
@@ -1569,7 +1620,6 @@ BG.Init(function()
             end
             if not cleanedYY then return end
             cleanedYY = cleanedYY:gsub("%s", "")
-            cleanedYY = tonumber(cleanedYY)
             Y.SaveLeaderYY(cleanedYY, playerName)
         end)
 
@@ -1624,7 +1674,28 @@ BG.Init(function()
         BG.ListYYdropDown = dropDown
         function BG.ListYY(edit)
             if not edit:HasFocus() then return end
-            if Size(BiaoGe.YYdb.LeaderYY) == 0 then return end
+
+            local nicknameCandidates = {}
+            local seen = {}
+            local function AddCandidate(name)
+                local key = NormalizeNickname(name)
+                if not key or seen[key] then return end
+                seen[key] = true
+                tinsert(nicknameCandidates, {
+                    nickname = NormalizeNicknameForStorage(name),
+                    colorname = SetClassCFF(name),
+                })
+            end
+
+            for _, v in ipairs(BG.raidRosterInfo or {}) do
+                if v.rank == 2 or v.isML then
+                    AddCandidate(v.name)
+                end
+            end
+            for _, v in pairs(BiaoGe.YYdb.LeaderYY) do
+                AddCandidate(v.name)
+            end
+            if #nicknameCandidates == 0 then return end
 
             local channelTypeMenu = {
                 {
@@ -1639,19 +1710,19 @@ BG.Init(function()
                 },
             }
 
-            for _, v in pairs(BiaoGe.YYdb.LeaderYY) do
+            for _, v in ipairs(nicknameCandidates) do
                 local pingjiaText = ""
                 for k, vv in pairs(BiaoGe.YYdb.all) do
-                    if v.yy == tonumber(vv.yy) then
+                    if SameNickname(v.nickname, vv.yy) then
                         pingjiaText = format(BG.STC_dis(L["（曾评价为：|cff%s%s|r）"]), Y.PingjiaColor(vv.pingjia), Y.Pingjia(vv.pingjia))
                         break
                     end
                 end
                 local a = {
-                    text = v.yy .. " " .. v.colorname .. pingjiaText,
+                    text = v.colorname .. pingjiaText,
                     notCheckable = true,
                     func = function()
-                        edit:SetText(v.yy)
+                        edit:SetText(v.nickname)
                         edit:ClearFocus()
                     end
                 }
@@ -1694,41 +1765,14 @@ BG.Init(function()
         BG.EndPJ = {}
 
         function BG.GetLeaderYY()
-            -- 是否有团长发的YY
-            for yy, v in pairs(BiaoGe.YYdb.LeaderYY) do
-                for _, vv in ipairs(BG.raidRosterInfo) do
-                    if v.name == vv.name and vv.rank == 2 then
-                        return yy
-                    end
+            for _, member in ipairs(BG.raidRosterInfo or {}) do
+                if member.rank == 2 then
+                    return member.name
                 end
             end
-            -- 是否有物品分配者发的YY
-            for yy, v in pairs(BiaoGe.YYdb.LeaderYY) do
-                for _, vv in ipairs(BG.raidRosterInfo) do
-                    if v.name == vv.name and vv.isML then
-                        return yy
-                    end
-                end
-            end
-            -- 是否有其他人发的YY
-            for yy, v in pairs(BiaoGe.YYdb.LeaderYY) do
-                for _, vv in ipairs(BG.raidRosterInfo) do
-                    if v.name == vv.name then
-                        return yy
-                    end
-                end
-            end
-            for yy in pairs(BiaoGe.YYdb.LeaderYY) do
-                if BiaoGe.YYdb.LeaderYY[yy].raidMember then
-                    local same = 0
-                    for _, raidName in ipairs(BiaoGe.YYdb.LeaderYY[yy].raidMember) do
-                        if BG.raidRosterName[raidName] then
-                            same = same + 1
-                        end
-                    end
-                    if same >= 15 then
-                        return yy
-                    end
+            for _, member in ipairs(BG.raidRosterInfo or {}) do
+                if member.isML then
+                    return member.name
                 end
             end
         end
@@ -1736,14 +1780,15 @@ BG.Init(function()
         local showed
         function BG.ShowYYPJ(sender)
             if not showed and BiaoGe.YYdb.share == 1 and not BG.IsML and BG.IsMLByName(sender) then
-                local yy = BG.GetLeaderYY()
-                if yy then
+                local yy = NormalizeNicknameForStorage(BG.GSN(sender) or BG.GetLeaderYY())
+                if NormalizeNickname(yy) then
                     for k, vv in pairs(BiaoGe.YYdb.all) do
-                        if tonumber(yy) == tonumber(vv.yy) then
+                        if SameNickname(yy, vv.yy) then
                             return
                         end
                     end
                     showed = true
+                    BG.EndPJ.nickname = yy
                     BG.After(1, function()
                         BG.EndPJ.new:Show()
                     end)
@@ -1795,7 +1840,7 @@ BG.Init(function()
                     end
 
                     -- 历遍团长YY记录
-                    BG.EndPJ.new.yy:SetText(BG.GetLeaderYY())
+                    BG.EndPJ.new.yy:SetText(BG.EndPJ.nickname or BG.GetLeaderYY())
 
                     BG.ClearFocus()
                     BG.PlaySound(2)
@@ -1868,7 +1913,7 @@ BG.Init(function()
                 edit:SetSize(190, 20)
                 edit:SetPoint("TOPLEFT", 100, height_start - height * n)
                 edit:SetAutoFocus(false)
-                edit:SetNumeric(true)
+                edit:SetMaxBytes(64)
                 edit:SetTextColor(1, 1, 0)
                 tinsert(BG.EndPJ.textcolor_table, edit)
                 BG.EndPJ.new.yy = edit
@@ -1896,7 +1941,7 @@ BG.Init(function()
                     end
                     BG.EndPJ.new.havedYY:Hide()
                     for key, value in pairs(BiaoGe.YYdb.all) do
-                        if self:GetText() == value.yy then
+                        if SameNickname(self:GetText(), value.yy) then
                             BG.EndPJ.new.havedYY:Show()
                             return
                         end
@@ -2166,17 +2211,18 @@ BG.Init(function()
 
                     local new = BG.EndPJ.new
                     if not new.pingjia then return end
-                    if new.yy:GetText() == "" or new.yy:GetText() == 0 then return end
+                    local nickname = NormalizeNicknameForStorage(new.yy:GetText())
+                    if not NormalizeNickname(nickname) then return end
 
                     for i = #BiaoGe.YYdb.all, 1, -1 do
-                        if new.yy:GetText() == BiaoGe.YYdb.all[i].yy then
+                        if SameNickname(nickname, BiaoGe.YYdb.all[i].yy) then
                             tremove(BiaoGe.YYdb.all, i)
                         end
                     end
 
                     local a = {
                         date = tonumber(date("%y%m%d", GetServerTime())),
-                        yy = new.yy:GetText(),
+                        yy = nickname,
                         name = new.name:GetText(),
                         pingjia = new.pingjia,
                         edit = new.edit:GetText(),
@@ -2331,11 +2377,13 @@ BG.Init(function()
             if prefix ~= BG.YYName then return end
             if #BG.YYMainFrame.searchText.all >= Y.maxSearchText then return end -- 最多收集300个评价详细
             local date, pingjia, edit = strsplit(",", msg, 3)
+            if not date or not pingjia or not edit then return end
             edit = edit:gsub(",$", "")
             if edit and edit ~= "" and ns.isVIP then
                 edit = edit .. "(" .. AddTexture("VIP") .. sender .. ")"
             end
             pingjia = tonumber(pingjia)
+            if not BG.YYMainFrame.searchText.sumpingjia[pingjia] then return end
             BG.YYMainFrame.searchText.sumpingjia[pingjia] = BG.YYMainFrame.searchText.sumpingjia[pingjia] + 1
             tinsert(BG.YYMainFrame.searchText.all, { date = date, pingjia = pingjia, edit = edit })
         elseif event == "CHAT_MSG_CHANNEL" then
@@ -2343,10 +2391,14 @@ BG.Init(function()
             languageID, lineID, guid, bnSenderID, isMobile, isSubtitle, hideSenderInLetterbox, supressRaidIcons = ...
             if channelBaseName ~= BG.YYName then return end
             sender = BG.GSN(sender)
-            local yy, date = strmatch(text, "yy(%d+),(%d+)")
+            local encodedNickname, date = strmatch(text, "^yyn([%x]+),(%d+)$")
+            local yy = encodedNickname and DecodeNickname(encodedNickname)
+            if not yy then
+                yy, date = strmatch(text, "^yy(%d+),(%d+)$")
+            end
             if not yy or CDing[sender] then return end
             for i, v in pairs(BiaoGe.YYdb.all) do
-                if tonumber(yy) == tonumber(v.yy) and tonumber(v.date) >= tonumber(date) then
+                if SameNickname(yy, v.yy) and tonumber(v.date) >= tonumber(date) then
                     local resendtext = v.date .. "," .. v.pingjia .. "," .. v.edit .. ","
                     local randomtime = random(1, Y.lateTime * 10) * 0.1
                     C_Timer.After(randomtime, function()

@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed - YY Evaluation nickname workflow
+
+- **`Core/Module/YY.lua`** - all normal, public-query, and quick-evaluation
+  fields now accept textual nicknames. Nicknames are trimmed, matched
+  case-insensitively, and kept in the compatible SavedVariables `yy` member.
+- Saved evaluation cells now explicitly receive mouse input, restoring their
+  existing hover, edit, Shift-query, and Alt-delete actions.
+- Inquiry no longer assumes WotLK font-color tables expose `GetRGB()`.
+- Anonymous Share discovery now uses a byte-safe encoded nickname request,
+  while upgraded clients still answer legacy numeric requests and preserve
+  existing numeric records.
+- **`Locales/enUS.lua`** - all three nickname fields and both nickname columns
+  now read `Nickname:` / `Nickname`; related English guidance describes
+  nickname-based queries without renaming the `YY Evaluation` product.
+
 ### Fixed - Raid Member achievements
 
 - **`Core/Module/Achievement.lua`** - Raid Member and achievement/statistic

@@ -147,11 +147,29 @@ BG.Init(function()
         local last
         local tabButtons = {}
 
-        local function LayoutOptionsTabs()
-            local availableWidth = SettingsPanel.Container:GetWidth() - 30
+        local function SetOptionsTabsFontObjects(normalFont, disabledFont, highlightFont)
+            for _, button in ipairs(tabButtons) do
+                button:SetNormalFontObject(normalFont)
+                button:SetDisabledFontObject(disabledFont)
+                button:SetHighlightFontObject(highlightFont)
+            end
+        end
+
+        local function GetOptionsTabsTextWidth()
             local textWidth = 0
             for _, button in ipairs(tabButtons) do
                 textWidth = textWidth + button:GetFontString():GetStringWidth()
+            end
+            return textWidth
+        end
+
+        local function LayoutOptionsTabs()
+            local availableWidth = SettingsPanel.Container:GetWidth() - 30
+            SetOptionsTabsFontObjects(BG.FontBlue15, BG.FontWhite18, BG.FontWhite15)
+            local textWidth = GetOptionsTabsTextWidth()
+            if textWidth > availableWidth then
+                SetOptionsTabsFontObjects(BG.FontBlue13, BG.FontWhite14, BG.FontWhite13)
+                textWidth = GetOptionsTabsTextWidth()
             end
             local padding = min(20, max(0, (availableWidth - textWidth) / #tabButtons))
             for _, button in ipairs(tabButtons) do

@@ -14,7 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`Core/Options.lua`** - the BiaoGe Interface Options tabs now share the
   available row width instead of independently reserving 20 pixels around
   every localized label. The row remeasures the active/inactive font state on
-  selection and panel show, keeping all available tabs, including
+  selection and panel show. If the labels themselves exceed the row, it
+  switches the complete row to the existing compact font set while preserving
+  the larger white active state, keeping all available tabs, including
   `Configuration`, inside the options container without abbreviating labels.
 
 ### Fixed - Character Overview instance choices

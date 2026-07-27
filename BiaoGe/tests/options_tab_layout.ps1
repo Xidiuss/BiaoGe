@@ -45,6 +45,28 @@ if (-not $layoutMatch.Success) {
     $layoutText = $layoutMatch.Groups[1].Value
 }
 
+$fontHelperMatch = [regex]::Match(
+    $optionsText,
+    '(?s)local function SetOptionsTabsFontObjects\(normalFont, disabledFont, highlightFont\)(.*?)local function GetOptionsTabsTextWidth'
+)
+if (-not $fontHelperMatch.Success -or
+    $fontHelperMatch.Groups[1].Value -notmatch 'ipairs\(tabButtons\)' -or
+    $fontHelperMatch.Groups[1].Value -notmatch 'SetNormalFontObject\(normalFont\)' -or
+    $fontHelperMatch.Groups[1].Value -notmatch 'SetDisabledFontObject\(disabledFont\)' -or
+    $fontHelperMatch.Groups[1].Value -notmatch 'SetHighlightFontObject\(highlightFont\)') {
+    $failures += "Font fallback must apply one coherent state set to every runtime tab."
+}
+
+$textWidthHelperMatch = [regex]::Match(
+    $optionsText,
+    '(?s)local function GetOptionsTabsTextWidth\(\)(.*?)local function LayoutOptionsTabs'
+)
+if (-not $textWidthHelperMatch.Success -or
+    $textWidthHelperMatch.Groups[1].Value -notmatch 'ipairs\(tabButtons\)' -or
+    $textWidthHelperMatch.Groups[1].Value -notmatch 'textWidth\s*=\s*textWidth\s*\+\s*button:GetFontString\(\):GetStringWidth\(\)') {
+    $failures += "Intrinsic width measurement must census every current runtime tab."
+}
+
 foreach ($marker in @(
     'SettingsPanel.Container:GetWidth() - 30',
     'button:GetFontString():GetStringWidth()',
@@ -58,6 +80,24 @@ foreach ($marker in @(
 
 if ($layoutText -notmatch 'min\(20,\s*max\(0,\s*\(availableWidth\s*-\s*textWidth\)\s*/\s*#tabButtons\)\)') {
     $failures += "Row allowance must share remaining width, clamp at zero, and preserve the existing 20-pixel maximum."
+}
+
+foreach ($compactMarker in @(
+    'if textWidth > availableWidth then',
+    'BG.FontBlue15',
+    'BG.FontWhite18',
+    'BG.FontWhite15',
+    'BG.FontBlue13',
+    'BG.FontWhite14',
+    'BG.FontWhite13'
+)) {
+    if (-not $layoutText.Contains($compactMarker)) {
+        $failures += "Overflowing intrinsic label widths must activate the compact row font contract: $compactMarker"
+    }
+}
+
+if ($layoutText -notmatch '(?s)if textWidth > availableWidth then.*?textWidth\s*=\s*GetOptionsTabsTextWidth\(\)') {
+    $failures += "Row width must be remeasured after applying compact fonts."
 }
 
 if ($optionsText -notmatch 'tinsert\(tabButtons,\s*bt\)') {

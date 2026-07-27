@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed - Interface Options tab overflow
+
+- **`Core/Options.lua`** - the BiaoGe Interface Options tabs now share the
+  available row width instead of independently reserving 20 pixels around
+  every localized label. The row remeasures the active/inactive font state on
+  selection and panel show, keeping all available tabs, including
+  `Configuration`, inside the options container without abbreviating labels.
+
 ### Fixed - Character Overview instance choices
 
 - Added compact WotLK raid labels while retaining full localized names in tooltips.

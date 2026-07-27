@@ -145,6 +145,19 @@ BG.Init(function()
     local biaoge, autoAuction, roleOverview, boss, map, others, config
     do
         local last
+        local tabButtons = {}
+
+        local function LayoutOptionsTabs()
+            local availableWidth = SettingsPanel.Container:GetWidth() - 30
+            local textWidth = 0
+            for _, button in ipairs(tabButtons) do
+                textWidth = textWidth + button:GetFontString():GetStringWidth()
+            end
+            local padding = min(20, max(0, (availableWidth - textWidth) / #tabButtons))
+            for _, button in ipairs(tabButtons) do
+                button:SetWidth(button:GetFontString():GetStringWidth() + padding)
+            end
+        end
 
         function BG.OptionsCreateTab(name, text) -- "Options_biaoge",L["表格"]
             local bt = CreateFrame("Button", "BG.Button" .. name, main)
@@ -161,12 +174,12 @@ BG.Init(function()
                 bt:SetPoint("LEFT", last, "RIGHT", 0, 0)
             end
             bt:SetText(text)
-            local t = bt:GetFontString()
-            bt:SetWidth(t:GetStringWidth() + 20)
+            tinsert(tabButtons, bt)
             BG["Button" .. name] = bt
             last = bt
             bt:SetScript("OnClick", function(self)
                 BG.HideTab(Frames, BG["Frame" .. name])
+                LayoutOptionsTabs()
                 BiaoGe.options.lastFrame = "Frame" .. name
                 BG.PlaySound(1)
             end)
@@ -211,6 +224,8 @@ BG.Init(function()
             BG.FrameOptions_biaoge:Show()
             BG.FrameOptions_biaoge:GetParent():SetEnabled(false)
         end
+        LayoutOptionsTabs()
+        main:HookScript("OnShow", LayoutOptionsTabs)
     end
 
     -- 模板

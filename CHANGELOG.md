@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added compact WotLK raid labels while retaining full localized names in tooltips.
 - Expanded the TBC and Legacy instance groups by default and restored a non-empty Legacy heading.
+- Normalized enUS hover text to `<size> man <full instance name>` without duplicated raid sizes or historical abbreviations.
 
 ### Fixed - Character Overview row separators
 

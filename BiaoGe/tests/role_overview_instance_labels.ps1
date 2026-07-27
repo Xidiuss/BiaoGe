@@ -6,9 +6,11 @@ $ErrorActionPreference = "Stop"
 
 $rolePath = Join-Path $Root "BiaoGe\Core\Module\RoleOverview.lua"
 $optionsPath = Join-Path $Root "BiaoGe\Core\Options.lua"
+$compatPath = Join-Path $Root "BiaoGe\Core\Compat.lua"
 $localePath = Join-Path $Root "BiaoGe\Locales\enUS.lua"
 $roleText = Get-Content -LiteralPath $rolePath -Raw -Encoding UTF8
 $optionsText = Get-Content -LiteralPath $optionsPath -Raw -Encoding UTF8
+$compatText = Get-Content -LiteralPath $compatPath -Raw -Encoding UTF8
 $localeText = Get-Content -LiteralPath $localePath -Raw -Encoding UTF8
 $failures = @()
 
@@ -108,8 +110,47 @@ if ($optionsText -notmatch 'local name3\s*=\s*BG\[tblName\]\[i\]\.name3') {
 if ($optionsText -notmatch '\(name3 or name2 or name\):gsub') {
     $failures += "Checkbox text must prefer compact labels over full names."
 }
-if ($optionsText -notmatch 'text\s*=\s*"\|cff"\s*\.\.\s*color\s*\.\.\s*maxplayers\s*\.\.\s*\(name2 or GetRealZoneText\(fbId\)\)') {
-    $failures += "Tooltip identity must continue using the full localized name."
+if ($optionsText -notmatch 'local enUS\s*=\s*GetLocale\(\)\s*==\s*"enUS"') {
+    $failures += "Options must gate the English tooltip grammar to enUS."
+}
+if ($optionsText -notmatch 'maxplayers\s*=\s*num\s+and\s+\(num\s*\.\.\s*"\s+man\s+"\)\s+or\s+""') {
+    $failures += "enUS tooltip size must use '<num> man '."
+}
+if ($optionsText -notmatch 'tooltipName\s*=\s*name3\s+and\s+name2:gsub\("\^%d\+%s\*",\s*""\)\s+or\s+GetRealZoneText\(fbId\)') {
+    $failures += "Tooltip must strip the duplicated WotLK size and resolve historical full names by instance ID."
+}
+if ($optionsText -notmatch 'text\s*=\s*"\|cff"\s*\.\.\s*color\s*\.\.\s*maxplayers\s*\.\.\s*tooltipName\s*\.\.\s*RR') {
+    $failures += "Tooltip must combine the normalized size and full instance name."
+}
+if ($optionsText -match 'maxplayers\s*\.\.\s*\(name2 or GetRealZoneText\(fbId\)\)') {
+    $failures += "Legacy tooltip concatenation duplicates WotLK size and exposes historical abbreviations."
+}
+
+$historicalCompatNames = @{
+    624 = "Vault of Archavon"
+    580 = "Sunwell Plateau"
+    564 = "Black Temple"
+    534 = "Hyjal Summit"
+    550 = "Tempest Keep"
+    548 = "Serpentshrine Cavern"
+    565 = "Gruul's Lair"
+    544 = "Magtheridon's Lair"
+    568 = "Zul'Aman"
+    532 = "Karazhan"
+    585 = "Magisters' Terrace"
+    556 = "Sethekk Halls"
+    531 = "Temple of Ahn'Qiraj"
+    509 = "Ruins of Ahn'Qiraj"
+    309 = "Zul'Gurub"
+    469 = "Blackwing Lair"
+    409 = "Molten Core"
+}
+foreach ($mapID in $historicalCompatNames.Keys) {
+    $pattern = '\[' + $mapID + '\]\s*=\s*"' +
+        [regex]::Escape($historicalCompatNames[$mapID]) + '"'
+    if ($compatText -notmatch $pattern) {
+        $failures += "GetRealZoneText compatibility map is missing the full name for $mapID ($($historicalCompatNames[$mapID]))."
+    }
 }
 
 $buttonWidthMatch = [regex]::Match($optionsText, 'local buttonWidth\s*=\s*(\d+)')

@@ -19,6 +19,7 @@ local Maxb                              = ns.Maxb
 
 local player                            = BG.playerName
 local realmID                           = GetRealmID()
+local enUS                              = GetLocale() == "enUS"
 
 local pt                                = print
 
@@ -2600,8 +2601,14 @@ BG.Init(function()
                     bt:SetScript("OnEnter", function(self)
                         local text
                         if dbName == "FBCDchoice" then
-                            local maxplayers = BG[tblName][i].num and (BG[tblName][i].num .. L["人"]) or ""
-                            text = "|cff" .. color .. maxplayers .. (name2 or GetRealZoneText(fbId)) .. RR
+                            local num = BG[tblName][i].num
+                            local maxplayers = num and (num .. L["人"]) or ""
+                            local tooltipName = name2 or GetRealZoneText(fbId)
+                            if enUS then
+                                maxplayers = num and (num .. " man ") or ""
+                                tooltipName = name3 and name2:gsub("^%d+%s*", "") or GetRealZoneText(fbId)
+                            end
+                            text = "|cff" .. color .. maxplayers .. tooltipName .. RR
                             if type ~= "fb" then
                                 text = self.Text:GetText()
                             end

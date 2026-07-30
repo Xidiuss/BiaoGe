@@ -1526,12 +1526,25 @@ BG.Init(function()
                 text:SetTextColor(0, 1, 0)
             end
         end
+        -- 已拍已交易
+        if v.type == 1 and v.trade then
+            local text = bts.frame:CreateFontString(nil, "OVERLAY")
+            text:SetFont(BIAOGE_TEXT_FONT, 14, "OUTLINE")
+            text:SetPoint("TOPRIGHT", -1, -1)
+            text:SetText(L["已交易"])
+            text:SetTextColor(0, 1, 0)
+            bts.trade = text
+        end
         -- 装备
         do
             local text = bts.frame:CreateFontString()
             text:SetFont(BIAOGE_TEXT_FONT, 14, "OUTLINE")
-            text:SetWidth(width - bts.icon:GetWidth())
             text:SetPoint("TOPLEFT", bts.icon, "TOPRIGHT", 1, 0)
+            if bts.trade then
+                text:SetPoint("TOPRIGHT", bts.trade, "TOPLEFT", -4, 0)
+            else
+                text:SetPoint("TOPRIGHT", bts.frame, "TOPRIGHT", -1, 0)
+            end
             text:SetText(link:gsub("%[", ""):gsub("%]", ""))
             text:SetJustifyH("LEFT")
             text:SetWordWrap(false)
@@ -1561,14 +1574,6 @@ BG.Init(function()
             text:SetJustifyH("LEFT")
             text:SetWordWrap(false)
             bts.money = text
-        end
-        -- 已拍未交易
-        if v.type == 1 and v.trade then
-            local text = bts.frame:CreateFontString(nil, "OVERLAY")
-            text:SetFont(BIAOGE_TEXT_FONT, 14, "OUTLINE")
-            text:SetPoint("TOPRIGHT", -1, -1)
-            text:SetText(L["已交易"])
-            text:SetTextColor(0, 1, 0)
         end
     end
 

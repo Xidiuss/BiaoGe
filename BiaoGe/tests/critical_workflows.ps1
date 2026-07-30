@@ -70,6 +70,25 @@ foreach ($marker in @(
     }
 }
 
+# Post-trade cosmetic gate A: the item name must consume the actual free row
+# width and stop before the optional localized Traded marker.
+foreach ($marker in @(
+    'bts.trade = text',
+    'text:SetPoint("TOPRIGHT", bts.trade, "TOPLEFT", -4, 0)',
+    'text:SetPoint("TOPRIGHT", bts.frame, "TOPRIGHT", -1, 0)'
+)) {
+    if (-not $rowFactory.Contains($marker)) {
+        $failures += "Auto Auction Log item-name geometry is missing marker: $marker"
+    }
+}
+$fixedRowWidths = ([regex]::Matches(
+    $rowFactory,
+    'text:SetWidth\(width - bts\.icon:GetWidth\(\)\)'
+)).Count
+if ($fixedRowWidths -ne 1) {
+    $failures += "Only the buyer/amount line may retain the fixed row width (found $fixedRowWidths uses)."
+}
+
 # US1: success and failure must share the same routing boundary.
 if ($auctionText -notmatch 'local function ResolveAuctionFB\(item\)') {
     $failures += "Automatic-auction outcomes need one canonical raid resolver."

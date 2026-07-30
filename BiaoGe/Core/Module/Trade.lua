@@ -2918,8 +2918,14 @@ BG.Init(function()
     end)
 
     -- 交易完成
-    BG.RegisterEvent("UI_INFO_MESSAGE", function(self, event, _, text)
-        if text == ERR_TRADE_COMPLETE then
+    local function GetUIInfoMessage(arg1, arg2)
+        if type(arg2) == "string" then return arg2 end
+        if type(arg1) == "string" then return arg1 end
+    end
+    local tradeCompleteMessage = ERR_TRADE_COMPLETE or LE_GAME_ERR_TRADE_COMPLETE
+    BG.RegisterEvent("UI_INFO_MESSAGE", function(self, event, arg1, arg2)
+        local text = GetUIInfoMessage(arg1, arg2)
+        if text == tradeCompleteMessage then
             BG.tradeSameMoney:SaveTradeMoney()
             BG.tradeSeeFrame.frame:SaveMoney()
 

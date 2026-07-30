@@ -395,6 +395,42 @@ if ($tradeState -match 'IsInRaid\(1\)') {
     $failures += "Trade status must still update after the raid has ended."
 }
 
+# Post-commit runtime gate: WotLK sends UI_INFO_MESSAGE with the message as
+# its first payload, while later clients prepend an errorType. The sole trade
+# completion boundary must normalize both shapes before invoking every
+# existing persistence writer.
+foreach ($marker in @(
+    'local function GetUIInfoMessage(arg1, arg2)',
+    'if type(arg2) == "string" then return arg2 end',
+    'if type(arg1) == "string" then return arg1 end',
+    'local tradeCompleteMessage = ERR_TRADE_COMPLETE or LE_GAME_ERR_TRADE_COMPLETE',
+    'BG.RegisterEvent("UI_INFO_MESSAGE", function(self, event, arg1, arg2)',
+    'local text = GetUIInfoMessage(arg1, arg2)',
+    'if text == tradeCompleteMessage then'
+)) {
+    if (-not $tradeText.Contains($marker)) {
+        $failures += "Trade-complete payload normalization is missing marker: $marker"
+    }
+}
+$tradeCompleteBlock = Get-Block `
+    -Text $tradeText `
+    -StartPattern 'BG\.RegisterEvent\("UI_INFO_MESSAGE"' `
+    -EndPattern '\n\s*end\)\s*\n\s*end\)' `
+    -Description "the UI_INFO_MESSAGE trade-completion block"
+foreach ($marker in @(
+    'BG.tradeSameMoney:SaveTradeMoney()',
+    'BG.tradeSeeFrame.frame:SaveMoney()',
+    'T.SetItemTradeState()',
+    'T.SaveTradeFastGiveMoney()'
+)) {
+    if (-not $tradeCompleteBlock.Contains($marker)) {
+        $failures += "Trade completion lost downstream writer: $marker"
+    }
+}
+if ($tradeText -match 'BG\.RegisterEvent\("UI_INFO_MESSAGE", function\(self, event, _, text\)') {
+    $failures += "Trade completion still assumes the later-client two-payload UI_INFO_MESSAGE shape."
+}
+
 # US3: cache readiness must cover the bundled seven-second ClassicAPI item
 # loader and perform one final synchronous harvest.
 if ($itemLibText -match 'timeElapsed\s*>=\s*2') {

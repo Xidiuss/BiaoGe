@@ -453,6 +453,43 @@ if ($tradeText -match 'BG\.RegisterEvent\("UI_INFO_MESSAGE", function\(self, eve
     $failures += "Trade completion still assumes the later-client two-payload UI_INFO_MESSAGE shape."
 }
 
+# Post-trade cosmetic gate C: Reset and Update must agree about preview
+# eligibility, and every visible English label must use an existing locale
+# key and measured geometry.
+$tradePreviewReset = Get-Block `
+    -Text $tradeText `
+    -StartPattern 'function BG\.tradeSeeFrame\.frame:Reset\(\)' `
+    -EndPattern '\n\s*end\s*\n\s*\n\s*function BG\.tradeSeeFrame\.frame:Update\(\)' `
+    -Description "Accounting Preview Reset"
+if ($tradePreviewReset -notmatch 'IsInRaid\(1\)\s+and\s+not BG\.IsAutoCreateBill\(\)') {
+    $failures += "Accounting Preview Reset must suppress automatic-bill raid members just like Update."
+}
+foreach ($marker in @(
+    'text:SetWordWrap(false)',
+    'text:SetWidth(text:GetStringWidth())',
+    'f:SetWidth(edit:GetWidth() + text:GetWidth() + 18)'
+)) {
+    if (-not $tradeText.Contains($marker)) {
+        $failures += "Trade preview localization/layout is missing marker: $marker"
+    }
+}
+$refundKey = [regex]::Match(
+    $tradeText,
+    '(?s)CreateFrame\("CheckButton", "BiaoGeTradeRefundCheck".*?bt\.Text:SetText\(L\["([^"]+)"\]\)'
+)
+if (-not $refundKey.Success -or
+    -not $localeText.Contains('L["' + $refundKey.Groups[1].Value + '"]')) {
+    $failures += "The Return item checkbox must use an enUS-defined localization key."
+}
+$automaticDebt = [regex]::Match(
+    $tradeText,
+    'qiankuanText = format\("\|cffFF0000" \.\. L\["([^"]+)"\] \.\. RR, qiankuan\)'
+)
+if (-not $automaticDebt.Success -or
+    -not $localeText.Contains('L["' + $automaticDebt.Groups[1].Value + '"]')) {
+    $failures += "The automatic-auction debt suffix must color an enUS-defined plain localization key."
+}
+
 # US3: cache readiness must cover the bundled seven-second ClassicAPI item
 # loader and perform one final synchronous harvest.
 if ($itemLibText -match 'timeElapsed\s*>=\s*2') {

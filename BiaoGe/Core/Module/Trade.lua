@@ -280,7 +280,7 @@ BG.Init(function()
                     local icon = select(5, GetItemInfoInstant(itemID))
                     local qiankuanText = ""
                     if qiankuan > 0 then
-                        qiankuanText = format(L["|cffFF0000（欠款%d）|r"], qiankuan)
+                        qiankuanText = format("|cffFF0000" .. L["（欠款%d）"] .. RR, qiankuan)
                     end
                     returnText = returnText .. AddTexture(icon) .. " |cffFFD700" .. money .. "|rg" .. qiankuanText .. "\n"
                     if saved then
@@ -486,8 +486,10 @@ BG.Init(function()
             text:SetFont(BIAOGE_TEXT_FONT, 14, "OUTLINE")
             text:SetTextColor(RGB("FF0000"))
             text:SetText(L["欠款："])
-            text:SetWidth(80)
+            text:SetWordWrap(false)
+            text:SetWidth(text:GetStringWidth())
             text:SetJustifyH("RIGHT")
+            f:SetWidth(edit:GetWidth() + text:GetWidth() + 18)
 
             function BG.tradeQianKuanEdit:Update()
                 self.frame:SetShown(BiaoGe.options["autoTrade"] == 1 and IsInRaid(1) and not BG.IsAutoCreateBill())
@@ -1193,7 +1195,9 @@ BG.Init(function()
 
             function BG.tradeSeeFrame.frame:Reset()
                 self:Hide()
-                if BiaoGe.options["autoTrade"] == 1 and BiaoGe.options["tradePreview"] == 1 and IsInRaid(1) then
+                if BiaoGe.options["autoTrade"] == 1 and BiaoGe.options["tradePreview"] == 1
+                    and IsInRaid(1) and not BG.IsAutoCreateBill()
+                then
                     self:Show()
                     BG.tradeSeeFrame.CheckButton:SetChecked(true)
                     BG.tradeSeeFrame.text:SetText("")
@@ -1305,7 +1309,7 @@ BG.Init(function()
             bt.Text = bt.Text or _G["BiaoGeTradeRefundCheckText"]
             bt:SetSize(BG.tradeSeeFrame.CheckButton:GetSize())
             bt.Text:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
-            bt.Text:SetText(L["本次交易为退货"])
+            bt.Text:SetText(L["本次交易记为退货"])
             bt.Text:SetWidth(min(BG.tradeSeeFrame.frame:GetWidth() - 35, bt.Text:GetStringWidth() + 20))
             bt.Text:SetWordWrap(false)
             bt:SetPoint("BOTTOMLEFT", BG.tradeSeeFrame.CheckButton, "TOPLEFT", 0, 0)

@@ -496,13 +496,26 @@ $auctionMoneyBlock = Get-Block `
     -StartPattern 'BG\.tradeAutoPickItem\s*=\s*\{\}' `
     -EndPattern '\n\s*local sumTargetMoney\s*=' `
     -Description "automatic-auction trade money renderers"
-foreach ($marker in @(
-    'local function FormatTradeMoney(money)',
-    'BG.FormatNumber(tonumber(money) or 0, 2) .. goldTex'
-)) {
-    if (-not $auctionMoneyBlock.Contains($marker)) {
-        $failures += "WotLK-safe trade money renderer is missing marker: $marker"
-    }
+$formatterDefinitions = [regex]::Matches(
+    $tradeText,
+    '(?m)^local function FormatTradeMoney\(money\)'
+)
+if ($formatterDefinitions.Count -ne 1) {
+    $failures += "Trade money formatting needs exactly one module-local definition (found $($formatterDefinitions.Count))."
+}
+$formatterIndex = $tradeText.IndexOf('local function FormatTradeMoney(money)')
+$tradeInitIndex = $tradeText.IndexOf('BG.Init(function()')
+if ($formatterIndex -lt 0 -or $tradeInitIndex -lt 0 -or $formatterIndex -ge $tradeInitIndex) {
+    $failures += "FormatTradeMoney must be defined before BG.Init so all four event handlers retain lexical access."
+}
+if (([regex]::Matches($tradeText, 'FormatTradeMoney\(')).Count -ne 5) {
+    $failures += "Trade money formatter census must remain one definition plus four calls."
+}
+if (-not $tradeText.Contains('BG.FormatNumber(tonumber(money) or 0, 2) .. goldTex')) {
+    $failures += "WotLK-safe trade money formatting lost its fixed gold-icon implementation."
+}
+if ($auctionMoneyBlock.Contains('local function FormatTradeMoney(money)')) {
+    $failures += "FormatTradeMoney is still trapped inside the UI-construction block."
 }
 if ($auctionMoneyBlock -match 'GetMoneyString\(') {
     $failures += "Automatic-auction trade overlays must not emit GetMoneyString texture markup."

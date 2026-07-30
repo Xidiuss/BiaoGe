@@ -41,6 +41,9 @@ BG.TradeMyMoneyChange = {}
 
 local T = {}
 local goldTex = "|TInterface\\MoneyFrame\\UI-GoldIcon:14:14:2:0|t"
+local function FormatTradeMoney(money)
+    return BG.FormatNumber(tonumber(money) or 0, 2) .. goldTex
+end
 
 BG.Init(function()
     local function FindReturnedAuctionRecord(Player, itemID)
@@ -2386,10 +2389,6 @@ BG.Init(function()
 
         -- 创建应收/应付对象
         do
-            local function FormatTradeMoney(money)
-                return BG.FormatNumber(tonumber(money) or 0, 2) .. goldTex
-            end
-
             local f = CreateFrame("Frame", nil, TradeFrame)
             f:SetFrameStrata("HIGH")
             local text = f:CreateFontString()

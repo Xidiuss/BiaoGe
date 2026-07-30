@@ -364,6 +364,11 @@ BG.Init(function()
             edit:SetSize(f:GetWidth() - 20, 22)
             edit:SetPoint("TOPLEFT", BG.auctionLogFrame.sumText, "BOTTOMLEFT", 7, -5)
             BG.auctionLogFrame.serachEdit = edit
+            edit.Instructions:SetText(L["搜索"])
+            edit.Instructions:ClearAllPoints()
+            edit.Instructions:SetPoint("LEFT", edit, "LEFT", 18, 0)
+            edit:SetText("")
+            edit:SetScript("OnEditFocusLost", EditBox_ClearHighlight)
             edit:SetScript("OnMouseDown", function(self, button)
                 if button == "RightButton" then
                     self:SetEnabled(false)
@@ -1329,6 +1334,7 @@ BG.Init(function()
 
             local f = CreateFrame("Frame", nil, child, "BackdropTemplate")
             f:SetSize(width, 32)
+            f:EnableMouse(true)
             if #BG.auctionLogFrame.buttons == 0 then
                 f:SetPoint("TOPLEFT")
             else
@@ -1819,6 +1825,24 @@ BG.Init(function()
 
     -- 记录自动拍卖结果
     do
+        local function ResolveAuctionFB(item)
+            if BG.FB2 then
+                return BG.FB2
+            end
+            local itemID = GetItemID(item)
+            for _, FB in ipairs(BG.GetAllFB()) do
+                for b = 1, Maxb[FB] do
+                    for i = 1, BG.Maxi do
+                        local zhuangbei = BG.Frame[FB]["boss" .. b]["zhuangbei" .. i]
+                        if zhuangbei and GetItemID(zhuangbei:GetText()) == itemID then
+                            return FB
+                        end
+                    end
+                end
+            end
+            return BG.FB1
+        end
+
         local function DeleteAuctioning(itemID)
             for i = #BG.auctionLogFrame.auctioning, 1, -1 do
                 if BG.auctionLogFrame.auctioning[i] == itemID then
@@ -1851,7 +1875,7 @@ BG.Init(function()
                 item:ContinueOnItemLoad(function()
                     local name, link, quality, level, _, _, _, _, EquipLoc, Texture,
                     _, typeID, subclassID, bindType = GetItemInfo(zhuangbei)
-                    local FB = BG.FB2 or BG.FB1
+                    local FB = ResolveAuctionFB(zhuangbei)
                     local log
                     if BG.sendMoneyLog and BG.sendMoneyLog[itemID] and next(BG.sendMoneyLog[itemID]) then
                         log = {}
@@ -1927,7 +1951,7 @@ BG.Init(function()
                 item:ContinueOnItemLoad(function()
                     local name, link, quality, level, _, _, _, _, EquipLoc, Texture,
                     _, typeID, subclassID, bindType = GetItemInfo(zhuangbei)
-                    local FB = BG.FB1
+                    local FB = ResolveAuctionFB(zhuangbei)
                     local a = {
                         type = 2,
                         time = time(),

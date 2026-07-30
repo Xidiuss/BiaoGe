@@ -1533,7 +1533,7 @@ BG.Init(function()
         local lastZoneID
         C_Timer.NewTicker(5, function()               -- 每5秒执行一次
             BG.FB2 = nil
-            local FBID = select(8, GetInstanceInfo()) -- 获取副本ID
+            local FBID = BG.GetCurrentSupportedInstanceID() -- 获取副本ID
             for _FBID, FB in pairs(BG.FBIDtable) do   -- 把副本ID转换为副本英文简写
                 if FBID == _FBID then
                     if BG.IsTBCFB(FB) and not ns.canShowTBC then

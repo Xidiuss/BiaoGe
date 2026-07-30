@@ -95,6 +95,7 @@ else
     -- WLK
     -- 黑名单
     BG.Loot.blacklist = {
+        40752, 40753, 45624, 47241, 49426, 90630, -- WotLK emblems + custom Emblem of Resolve
         -- 时光服
         260344, 257606, 260346, -- 橙色项链
         264750, 264779, 264759, 264769,

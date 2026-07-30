@@ -2,6 +2,7 @@ if BG.IsBlackListPlayer then return end
 local AddonName, ns = ...
 -- spec 004 taint fix: ClassicAPI-shaped GetItemInfo via ns.* (global stays untainted)
 local GetItemInfo, GetItemInfoInstant = ns.GetItemInfo or GetItemInfo, ns.GetItemInfoInstant or GetItemInfoInstant
+local LootSlotHasItem = LootSlotHasItem or LootSlotIsItem
 
 local LibBG = ns.LibBG
 local L = ns.L
@@ -17,6 +18,49 @@ local SetClassCFF = ns.SetClassCFF
 local GetText_T = ns.GetText_T
 local AddTexture = ns.AddTexture
 local GetItemID = ns.GetItemID
+
+local function MatchLootTemplate(msg, template, multiple)
+    if type(template) ~= "string" then return end
+    local pattern = template:gsub("%%s", "(.+)")
+    if multiple then
+        pattern = pattern:gsub("%%d", "(%%d+)")
+    end
+    return strmatch(msg, "^" .. pattern)
+end
+
+local function ParseLootMessage(msg)
+    local link, count = MatchLootTemplate(msg, LOOT_ITEM_SELF_MULTIPLE, true)
+    if link then return nil, link, count end
+
+    link, count = MatchLootTemplate(msg, LOOT_ITEM_PUSHED_SELF_MULTIPLE, true)
+    if link then return nil, link, count end
+
+    link = MatchLootTemplate(msg, LOOT_ITEM_SELF)
+    if link then return nil, link end
+
+    link = MatchLootTemplate(msg, LOOT_ITEM_PUSHED_SELF)
+    if link then return nil, link end
+
+    local lootplayer
+    lootplayer, link, count = MatchLootTemplate(msg, LOOT_ITEM_MULTIPLE, true)
+    if link then return lootplayer, link, count end
+
+    lootplayer, link, count = MatchLootTemplate(msg, LOOT_ITEM_PUSHED_MULTIPLE, true)
+    if link then return lootplayer, link, count end
+
+    lootplayer, link = MatchLootTemplate(msg, LOOT_ITEM)
+    if link then return lootplayer, link end
+
+    lootplayer, link = MatchLootTemplate(msg, LOOT_ITEM_PUSHED)
+    return lootplayer, link
+end
+
+local function GetLootCandidate(slot, index)
+    if BG.IsWLK_80 then
+        return GetMasterLootCandidate(index)
+    end
+    return GetMasterLootCandidate(slot, index)
+end
 
 local Maxb = ns.Maxb
 local HopeMaxn = ns.HopeMaxn
@@ -211,14 +255,37 @@ BG.Init(function()
             return 5
         end
     end
+    local function SetBossIndexFromUnits(FB)
+        if not (FB and BG.Boss[FB]) then return end
+        for i = 1, (MAX_BOSS_FRAMES or 5) do
+            local unit = "boss" .. i
+            local unitName = UnitName(unit)
+            if unitName then
+                for bossIndex = 1, Maxb[FB] - 2 do
+                    local bossInfo = BG.Boss[FB]["boss" .. bossIndex]
+                    if bossInfo and bossInfo.name2 == unitName then
+                        numb = bossIndex
+                        lasttime = GetTime()
+                        start = true
+                        return bossIndex
+                    end
+                end
+            end
+        end
+    end
     -- 获取BOSS战ID
     local f = CreateFrame("Frame")
     f:RegisterEvent("ENCOUNTER_START")
     f:RegisterEvent("ENCOUNTER_END")
+    f:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
     f:SetScript("OnEvent", function(self, event, ...)
-        local bossID, _, _, _, success = ...
         local FB = BG.FB2
         if not FB then return end
+        if event == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" then
+            SetBossIndexFromUnits(FB)
+            return
+        end
+        local bossID, _, _, _, success = ...
         if event == "ENCOUNTER_START" then
             start = true
             if IsBWLsod_boss5orboss6(bossID) then
@@ -253,6 +320,12 @@ BG.Init(function()
                 numb = Maxb[FB] - 1
                 start = nil
             end
+        end
+    end)
+    BG.RegisterEvent("PLAYER_REGEN_ENABLED", function(self, event)
+        if start then
+            start = nil
+            lasttime = GetTime()
         end
     end)
     -- 击杀BOSS x秒后进入下一次战斗，就变回杂项
@@ -449,6 +522,28 @@ BG.Init(function()
         end
     end
 
+    local function GetBossIndexByLootItem(FB, itemID)
+        local difficultyID = GetRaidDifficultyID and GetRaidDifficultyID()
+        local diffName = BG.diffIDTbl[FB] and BG.diffIDTbl[FB][difficultyID] or "N"
+        local lootDB = BG.Loot[FB] and BG.Loot[FB][diffName]
+        if not lootDB then return end
+        local candidates = {}
+        for bossIndex = 1, Maxb[FB] - 2 do
+            local bossLoot = lootDB["boss" .. bossIndex]
+            if bossLoot then
+                for _, sourceItemID in ipairs(bossLoot) do
+                    if tonumber(sourceItemID) == itemID then
+                        tinsert(candidates, bossIndex)
+                        break
+                    end
+                end
+            end
+        end
+        if #candidates == 1 then
+            return candidates[1]
+        end
+    end
+
     -- 拾取事件监听
     -- local testItemID = 59521
     local testItemID = 67429
@@ -467,30 +562,7 @@ BG.Init(function()
 
         if trade then return end -- 是否刚交易完
 
-        local lootplayer, link, count
-        link, count = strmatch(msg, string.gsub(string.gsub(LOOT_ITEM_SELF_MULTIPLE, "%%s", "(.+)"), "%%d", "(%%d+)"));
-        if (not link) then
-            link, count = strmatch(msg, string.gsub(string.gsub(LOOT_ITEM_PUSHED_SELF_MULTIPLE, "%%s", "(.+)"), "%%d", "(%%d+)"));
-            if (not link) then
-                link = msg:match(LOOT_ITEM_SELF:gsub("%%s", "(.+)"));
-                if (not link) then
-                    link = msg:match(LOOT_ITEM_PUSHED_SELF:gsub("%%s", "(.+)"));
-
-                    if (not link) then
-                        lootplayer, link, count = strmatch(msg, string.gsub(string.gsub(LOOT_ITEM_MULTIPLE, "%%s", "(.+)"), "%%d", "(%%d+)"));
-                        if (not link) then
-                            lootplayer, link, count = strmatch(msg, string.gsub(string.gsub(LOOT_ITEM_PUSHED_MULTIPLE, "%%s", "(.+)"), "%%d", "(%%d+)"));
-                            if (not link) then
-                                lootplayer, link = msg:match("^" .. LOOT_ITEM:gsub("%%s", "(.+)"));
-                                if (not link) then
-                                    lootplayer, link = msg:match("^" .. LOOT_ITEM_PUSHED:gsub("%%s", "(.+)"));
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-        end
+        local lootplayer, link, count = ParseLootMessage(msg)
 
         if buy and not lootplayer then return end   -- 你是否刚购买了物品
         if quest and not lootplayer then return end -- 是否获得了任务物品
@@ -498,9 +570,16 @@ BG.Init(function()
         if not lootplayer then lootplayer = BG.playerName end
         if not count then count = 1 end
 
-        local name, _, quality, level, _, _, _, stackCount, _, Texture, _, typeID, subclassID, bindType = GetItemInfo(link)
-        if bindType == 4 then return end -- 属于任务物品的不记录
         local itemID = GetItemInfoInstant(link)
+        if not itemID then return end
+        local lootNumb = numb
+        local lootProcessed
+        local function ProcessLootItem()
+        if lootProcessed then return end
+        local name, _, quality, level, _, _, _, stackCount, _, Texture, _, typeID, subclassID, bindType = GetItemInfo(link)
+        if not quality then return end
+        lootProcessed = true
+        if bindType == 4 then return end -- 属于任务物品的不记录
         if stackCount == 1 and BG.ValueInTable(BG.Loot.stackItems, itemID) then
             stackCount = 10
         end
@@ -638,10 +717,26 @@ BG.Init(function()
             end
         end
         -- 正常拾取
-        if not numb then
-            numb = Maxb[FB] - 1 -- 第一个boss前的小怪设为杂项
+        if not lootNumb then
+            lootNumb = GetBossIndexByLootItem(FB, itemID)
         end
-        AddLootItem(FB, numb, link, Texture, level, isHope, count, typeID, lootplayer)
+        if not lootNumb then
+            lootNumb = Maxb[FB] - 1 -- 第一个boss前的小怪设为杂项
+        end
+        AddLootItem(FB, lootNumb, link, Texture, level, isHope, count, typeID, lootplayer)
+        end
+
+        ProcessLootItem()
+        if not lootProcessed then
+            local item = Item:CreateFromItemID(itemID)
+            if item then
+                item:ContinueOnItemLoad(ProcessLootItem)
+            end
+            -- ClassicAPI 1.23 clears unresolved callbacks at its seven-second
+            -- deadline without invoking them. Harvest the captured event link
+            -- once after that window so this persistence event is not lost.
+            BG.After(8, ProcessLootItem)
+        end
     end
     ns.LootItem = LootItem
 
@@ -720,7 +815,7 @@ BG.Init2(function()
             local items = {}
             for li = 1, GetNumLootItems() do
                 for ci = 1, GetNumGroupMembers() do
-                    if LootSlotHasItem(li) and GetMasterLootCandidate(li, ci) == cpPlayer then
+                    if LootSlotHasItem(li) and GetLootCandidate(li, ci) == cpPlayer then
                         local itemLink = GetLootSlotLink(li)
                         if itemLink then
                             local itemID = GetItemID(itemLink)
@@ -804,7 +899,7 @@ BG.Init2(function()
         if not IsMasterLooter() then return end
         for li = 1, GetNumLootItems() do
             for ci = 1, GetNumGroupMembers() do
-                if LootSlotHasItem(li) and GetMasterLootCandidate(li, ci) == BG.playerName then
+                if LootSlotHasItem(li) and GetLootCandidate(li, ci) == BG.playerName then
                     local itemLink = GetLootSlotLink(li)
                     if itemLink then
                         local name, link, quality, level, _, _, _, itemStackCount, _, Texture,
@@ -851,7 +946,7 @@ BG.Init2(function()
             BG.After(0, function()
                 for li = 1, GetNumLootItems() do
                     for ci = 1, GetNumGroupMembers() do
-                        if LootSlotHasItem(li) and GetMasterLootCandidate(li, ci) == cpPlayer then
+                        if LootSlotHasItem(li) and GetLootCandidate(li, ci) == cpPlayer then
                             local itemLink = GetLootSlotLink(li)
                             if itemLink then
                                 local itemID = GetItemID(itemLink)
@@ -1156,7 +1251,7 @@ BG.Init2(function()
                         local lootIcon, lootName, lootQuantity, currencyID, lootQuality = GetLootSlotInfo(li)
                         if lootQuality >= quality then
                             for ci = 1, GetNumGroupMembers() do
-                                if not GetMasterLootCandidate(li, ci) then
+                                if not GetLootCandidate(li, ci) then
                                     local unit = "raid" .. ci
                                     local name = GetUnitName(unit, true)
                                     if name and not list[name] then
@@ -1585,30 +1680,7 @@ BG.Init2(function()
         BG.RegisterEvent("CHAT_MSG_LOOT", function(self, event, msg)
             local info = GetInfo()
             if info and IsInRaid(1) then
-                local _lootplayer, link, count
-                link, count = strmatch(msg, string.gsub(string.gsub(LOOT_ITEM_SELF_MULTIPLE, "%%s", "(.+)"), "%%d", "(%%d+)"));
-                if (not link) then
-                    link, count = strmatch(msg, string.gsub(string.gsub(LOOT_ITEM_PUSHED_SELF_MULTIPLE, "%%s", "(.+)"), "%%d", "(%%d+)"));
-                    if (not link) then
-                        link = msg:match(LOOT_ITEM_SELF:gsub("%%s", "(.+)"));
-                        if (not link) then
-                            link = msg:match(LOOT_ITEM_PUSHED_SELF:gsub("%%s", "(.+)"));
-
-                            if (not link) then
-                                _lootplayer, link, count = strmatch(msg, string.gsub(string.gsub(LOOT_ITEM_MULTIPLE, "%%s", "(.+)"), "%%d", "(%%d+)"));
-                                if (not link) then
-                                    _lootplayer, link, count = strmatch(msg, string.gsub(string.gsub(LOOT_ITEM_PUSHED_MULTIPLE, "%%s", "(.+)"), "%%d", "(%%d+)"));
-                                    if (not link) then
-                                        _lootplayer, link = msg:match("^" .. LOOT_ITEM:gsub("%%s", "(.+)"));
-                                        if (not link) then
-                                            _lootplayer, link = msg:match("^" .. LOOT_ITEM_PUSHED:gsub("%%s", "(.+)"));
-                                        end
-                                    end
-                                end
-                            end
-                        end
-                    end
-                end
+                local _lootplayer, link, count = ParseLootMessage(msg)
                 if link then
                     local itemID = GetItemID(link)
                     if itemID == info.itemID then

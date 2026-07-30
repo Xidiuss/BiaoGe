@@ -17,6 +17,19 @@ local RealmID = GetRealmID()
 local player = BG.playerName
 BG.After = C_Timer.After
 
+function BG.GetCurrentSupportedInstanceID()
+    local instanceName, _, _, _, _, _, _, instanceID = GetInstanceInfo()
+    if instanceID and BG.FBIDtable[instanceID] then
+        return instanceID
+    end
+    if not instanceName or instanceName == "" then return end
+    for supportedInstanceID in pairs(BG.FBIDtable) do
+        if GetRealZoneText(supportedInstanceID) == instanceName then
+            return supportedInstanceID
+        end
+    end
+end
+
 ------------------函数：四舍五入------------------ 数字，小数点数
 local function Round(number, decimal_places)
     local mult = 10 ^ (decimal_places or 0)

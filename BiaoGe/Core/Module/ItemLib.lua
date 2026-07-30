@@ -170,6 +170,34 @@ do
         tinsert(allItem, itemID)
         BG.Tooltip_SetItemByID(_itemID)
     end
+    local ITEM_CACHE_TIMEOUT = 8
+
+    local function CacheItemInfo(FB, itemID)
+        local _itemID = itemID
+        if type(itemID) == "string" then
+            _itemID = GetItemID(itemID)
+        end
+        local name, link, quality, level, _, _, _, _, EquipLoc, Texture,
+        _, typeID, subclassID, bindType, _, setID = GetItemInfo(itemID)
+        if not (name and link) then return end
+        typeID = DeriveItemClassID(typeID, EquipLoc)
+        local tooltipText = BG.GetTooltipTextLeftAll(_itemID)
+        info[FB][itemID] = {
+            name = name,
+            link = link,
+            quality = quality,
+            level = level,
+            EquipLoc = EquipLoc,
+            Texture = Texture,
+            typeID = typeID,
+            subclassID = subclassID,
+            bindType = bindType,
+            setID = setID,
+            tooltipText = tooltipText,
+        }
+        return true
+    end
+
     local function SaveItemInfo()
         local FB = BG.FB1
         local startI = 1
@@ -177,12 +205,37 @@ do
         local allCount = #allItem
         local cacheCount = 0
         local isDoing = true
+        local pendingItems = {}
+
+        local function ResolvePendingItem(itemID)
+            if pendingItems[itemID] and CacheItemInfo(FB, itemID) then
+                pendingItems[itemID] = nil
+                cacheCount = cacheCount + 1
+            end
+        end
+
+        local function FinalizePendingItems()
+            for itemID in pairs(pendingItems) do
+                CacheItemInfo(FB, itemID)
+                pendingItems[itemID] = nil
+                cacheCount = cacheCount + 1
+            end
+        end
+
+        local function Finish(self)
+            self:SetScript("OnUpdate", nil)
+            self:Hide()
+            dbOK = true
+        end
+
         BG.OnUpdateTime(function(self, elapsed)
             self.timeElapsed = self.timeElapsed + elapsed
-            if cacheCount >= allCount or self.timeElapsed >= 2 then
-                self:SetScript("OnUpdate", nil)
-                self:Hide()
-                dbOK = true
+            if cacheCount >= allCount then
+                Finish(self)
+                return
+            elseif not isDoing and self.timeElapsed >= ITEM_CACHE_TIMEOUT then
+                FinalizePendingItems()
+                Finish(self)
                 return
             elseif isDoing then
                 for ii = startI, startI + oneTime - 1 do
@@ -196,29 +249,14 @@ do
                         if not item or item:IsItemEmpty() then
                             cacheCount = cacheCount + 1
                         else
+                            pendingItems[itemID] = true
                             item:ContinueOnItemLoad(function()
-                                local name, link, quality, level, _, _, _, _, EquipLoc, Texture,
-                                _, typeID, subclassID, bindType, _, setID = GetItemInfo(itemID)
-                                typeID = DeriveItemClassID(typeID, EquipLoc)
-                                local tooltipText = BG.GetTooltipTextLeftAll(_itemID)
-                                info[FB][itemID] = {
-                                    name = name,
-                                    link = link,
-                                    quality = quality,
-                                    level = level,
-                                    EquipLoc = EquipLoc,
-                                    Texture = Texture,
-                                    typeID = typeID,
-                                    subclassID = subclassID,
-                                    bindType = bindType,
-                                    setID = setID,
-                                    tooltipText = tooltipText,
-                                }
-                                cacheCount = cacheCount + 1
+                                ResolvePendingItem(itemID)
                             end)
                         end
                     else
                         isDoing = false
+                        self.timeElapsed = 0
                         break
                     end
                 end

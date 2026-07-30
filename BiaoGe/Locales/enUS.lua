@@ -361,6 +361,7 @@ do
     L["使用方案"] = "Using the program"
     L["修改方案"] = "Modify the program"
     L["（ALT+%s改名，ALT+%s删除表格）"] = "(ALT+%s to change name, ALT+%s to delete form)"
+    L["搜索"] = "Search"
     L["搜索该记录"] = "Search this record"
     L["删除该记录"] = "Delete this record"
     L["（ALT+%s设为心愿装备。部位按钮支持使用滚轮切换）"] = "(ALT+%s Set to Wish Gear . The part buttons support switching using the scroll wheel)"
@@ -2325,6 +2326,19 @@ do
         L["戈托克・苍蹄"] = "Gortok Palehoof"
         L["残忍的斯卡迪"] = "Skarvald the Constructor"
         L["伊米隆国王"] = "King Ymiron"
+
+        L["布隆亚姆"] = "Bronjahm"
+        L["噬魂者"] = "Devourer of Souls"
+        L["熔炉之主加弗斯特"] = "Forgemaster Garfrost"
+        L["科瑞克"] = "Krick"
+        L["领主泰兰努斯"] = "Scourgelord Tyrannus"
+        L["法瑞克"] = "Falric"
+        L["玛维恩"] = "Marwyn"
+        L["逃离阿尔萨斯"] = "Escape from Arthas"
+        L["总冠军"] = "Grand Champions"
+        L["纯洁者耶德瑞克"] = "Eadric the Pure"
+        L["银色神官帕尔崔丝"] = "Argent Confessor Paletress"
+        L["黑骑士"] = "The Black Knight"
     end
 
     -- TBC

@@ -70,18 +70,21 @@ local function CheckTimeOut(time)
     end)
 end
 
-local function Send(num, sumMoney, FB)
+local function Send(num, sumMoney, FB, recordToken)
+    recordToken = recordToken or (BiaoGe.duizhang[num] and BiaoGe.duizhang[num].t)
+    if not recordToken then return end
+    local recordPayload = num .. ":" .. recordToken
     local FBtext = ""
     local FBName = BG.GetFBinfo(FB, "shortName")
     if FBName then
         FBtext = L["，"] .. BG.STC_b1(FBName)
     end
     local link = format(L["|Hgarrmission:BiaoGeDuiZhang:%s|h[点击：对账]（|cff00ff00装备总收入%s|r%s）"],
-        num, sumMoney, FBtext)
+        recordPayload, sumMoney, FBtext) .. "|h|r"
     SendSystemMessage(link)
     BG.After(0.1, function()
         local link = format(L["|Hgarrmission:BiaoGeDuiZhangCopy:%s:%s|h[ALT+点击：复制账单]（|cff00ff00仅对装备收入有效|r）"],
-            num, FB)
+            recordPayload, FB) .. "|h|r"
         SendSystemMessage(link)
     end)
 end
@@ -240,12 +243,14 @@ f:SetScript("OnEvent", function(self, event, msg, sender, ...)
         linshi_duizhang.member = SaveRaidMember()
         local FB = linshi_duizhang.FB
         tinsert(BiaoGe.duizhang, linshi_duizhang)
+        local savedNum = #BiaoGe.duizhang
+        local recordToken = linshi_duizhang.t
         linshi_duizhang = nil
         BG.IsSavingLedger = nil
         BG.DuiZhangList()
         if FB then
             BG.After(0.1, function()
-                Send(#BiaoGe.duizhang, sumMoney, FB)
+                Send(savedNum, sumMoney, FB, recordToken)
             end)
             BG.ShowYYPJ(sender)
         end
@@ -1024,6 +1029,22 @@ function BG.DuiZhang0()
     BG.DuiZhangMainFrame.msgFrame:SetText("")
 end
 
+local function ResolveDuiZhangNum(num, recordToken)
+    num = tonumber(num)
+    recordToken = tonumber(recordToken)
+    if recordToken then
+        for i, v in ipairs(BiaoGe.duizhang or {}) do
+            if tonumber(v.t) == recordToken then
+                return i
+            end
+        end
+        return
+    end
+    if num and BiaoGe.duizhang and BiaoGe.duizhang[num] then
+        return num
+    end
+end
+
 local function CopyBill(num, FB)
     FB = FB or BG.FB1
     if FB ~= BG.FB1 then
@@ -1037,18 +1058,39 @@ local function CopyBill(num, FB)
     BG.ClickTabButton(BG.FBMainFrameTabNum)
 end
 
-hooksecurefunc("SetItemRef", function(link)
-    local _, BiaoGeDuiZhang, num, FB = strsplit(":", link)
+local function HandleDuiZhangLink(link)
+    local _, BiaoGeDuiZhang, num, recordToken, FB = strsplit(":", link)
+    if BiaoGeDuiZhang ~= "BiaoGeDuiZhang" and BiaoGeDuiZhang ~= "BiaoGeDuiZhangCopy" then
+        return
+    end
+    if BiaoGeDuiZhang == "BiaoGeDuiZhangCopy" and not IsAltKeyDown() then
+        return
+    end
+    if BiaoGeDuiZhang == "BiaoGeDuiZhangCopy" and not FB then
+        -- Legacy payload: action:index:FB.
+        FB = recordToken
+        recordToken = nil
+    end
+    num = ResolveDuiZhangNum(num, recordToken)
+    if not num then
+        BG.SendSystemMessage(L["账单识别错误或超时！"])
+        return
+    end
     if BiaoGeDuiZhang == "BiaoGeDuiZhang" and num then
-        num = tonumber(num)
         BG.MainFrame:Show()
         BG.ClickTabButton(BG.DuiZhangMainFrameTabNum)
         BG.DuiZhangSet(num)
         LibBG:UIDropDownMenu_SetText(BG.DuiZhangDropDown.DropDown, CreateZhangDanTitle(num))
         BG.PlaySound(1)
-    elseif BiaoGeDuiZhang == "BiaoGeDuiZhangCopy" and num and IsAltKeyDown() then
-        num = tonumber(num)
+    elseif BiaoGeDuiZhang == "BiaoGeDuiZhangCopy" and num then
         CopyBill(num, FB)
         BG.PlaySound(2)
     end
-end)
+end
+
+if ns.RegisterCustomLinkHandler then
+    ns.RegisterCustomLinkHandler("BiaoGeDuiZhang", HandleDuiZhangLink)
+    ns.RegisterCustomLinkHandler("BiaoGeDuiZhangCopy", HandleDuiZhangLink)
+else
+    hooksecurefunc("SetItemRef", HandleDuiZhangLink)
+end

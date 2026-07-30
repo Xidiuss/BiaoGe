@@ -9,6 +9,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed - Auction Log, Bills, and Gear Lib workflows
+
+- **`Core/Module/AuctionLog.lua`** - Auto Auction Log rows now receive mouse
+  input for hover, context actions, selection, and batch auctioning. Completed
+  and failed automatic auctions now prefer the physical instance, then the
+  Table containing the item, instead of being assigned to an unrelated
+  visible tab. Its Search hint is now visual placeholder text and no longer
+  hides every record as a physical `Searach` filter value; the hint is also
+  positioned after the magnifier instead of overlapping it.
+- **`Core/Module/DuiZhang.lua` + `Core/Compat.lua`** - generated Reconcile and
+  Copy Bill chat actions now emit valid closed hyperlinks and dispatch
+  directly from the WotLK custom-link interceptor, avoiding both the native
+  `ItemRef.lua` error and the unreliable post-hook path with Aux. Actions
+  resolve a stable reconciliation timestamp, retain compatibility with old
+  numeric links, and reject deleted records without indexing nil.
+- **`Core/Module/Loot.lua`** - eligible raid loot retains event-time raid/boss
+  context and uses one idempotent immediate/listener/final-harvest processor,
+  so a silently expired ClassicAPI item callback cannot lose the Tables row.
+  Loot-window assignment actions also use the native WotLK loot-slot
+  predicate when the later Retail predicate is unavailable. WotLK boss rows
+  are captured from `INSTANCE_ENCOUNTER_ENGAGE_UNIT` boss units, with a
+  unique-only loot-database fallback when event context is unavailable.
+  Master-loot candidate lookup now follows the one-argument WotLK API, so
+  `One click to assign` compares and awards the same recipient. Both loot
+  message consumers share a nil-safe localized parser, preventing absent
+  optional `LOOT_ITEM*` formats from aborting ordinary other-player loot.
+- **`Core/DB/DB_Loot_BlackWhiteList.lua`** - standard WotLK emblems and the
+  server's custom Emblem of Resolve are excluded from Tables loot by exact
+  item ID without suppressing legitimate stackable raid materials.
+- **`Core/function1.lua`, `Core/BiaoGe.lua`, `ClearBiaoGe.lua`, and `YY.lua`**
+  - supported raid identity no longer depends on Retail's eighth
+  `GetInstanceInfo()` return. WotLK resolves the native instance name through
+  the existing raid-ID map, restoring `BG.FB2` and its Tables routing.
+- **`Core/Module/Trade.lua`** - successful delivery now marks the newest
+  matching Auction Log record across supported raid tables, even after
+  leaving the raid or viewing another table.
+- **`Core/Compat.lua` + `Core/Module/ItemOutTime.lua`** - restored real WotLK
+  master-looter detection from raid-roster ownership with native index
+  fallbacks for the unlooted-gear reminder, and made Gear Exp Rem Time parse
+  localized duration spacing, case, and singular/plural forms.
+- **`Core/Module/ItemLib.lua`** - Gear Lib now waits through the bundled
+  asynchronous item-loader window and performs a final cache harvest, rather
+  than permanently accepting a partial weapon/ICC list after two seconds.
+- **`Core/Compat.lua` + `Locales/enUS.lua`** - completed all WotLK dungeon
+  instance and boss/event names consumed by Gear Lib Acquisition labels.
+
 ### Fixed - YY Evaluation nickname workflow
 
 - **`Core/Module/YY.lua`** - all normal, public-query, and quick-evaluation

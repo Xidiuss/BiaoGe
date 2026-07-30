@@ -21,6 +21,31 @@ local pt = print
 local RealmID = GetRealmID()
 local player = BG.playerName
 
+local function ParseTradeTimeRemaining(time)
+    if type(time) ~= "string" then return end
+    local normalized = time:lower():gsub("%s+", "")
+    local hourUnit = (L["小时"] or ""):lower():gsub("%s+", ""):gsub("s$", "")
+    local minuteUnit = (L["分钟"] or ""):lower():gsub("%s+", ""):gsub("s$", "")
+    local h = hourUnit ~= "" and tonumber(normalized:match("(%d+)" .. hourUnit))
+    local m = minuteUnit ~= "" and tonumber(normalized:match("(%d+)" .. minuteUnit))
+    if h or m then
+        return (h or 0) * 60 + (m or 0)
+    end
+
+    local numbers = {}
+    for number in normalized:gmatch("%d+") do
+        numbers[#numbers + 1] = tonumber(number)
+    end
+    if #numbers >= 2 then
+        return numbers[1] * 60 + numbers[2]
+    elseif #numbers == 1 then
+        if normalized:find("hour", 1, true) or normalized:find("hr", 1, true) then
+            return numbers[1] * 60
+        end
+        return numbers[1]
+    end
+end
+
 BG.Init(function()
     BiaoGe.options.showGuoQiFrame = BiaoGe.options.showGuoQiFrame or 0
     BiaoGe.lastGuoQiTime = BiaoGe.lastGuoQiTime or 0
@@ -133,17 +158,10 @@ BG.Init(function()
                         if tx then
                             local time = tx:match(BIND_TRADE_TIME_REMAINING:gsub("%%s", "(.+)"))
                             if time then
-                                local h = tonumber(time:match("(%d+)" .. L["小时"]))
-                                local m = tonumber(time:match("(%d+)" .. L["分钟"]))
-                                local time = 0
-                                if h then
-                                    time = time + h * 60
-                                end
-                                if m then
-                                    time = time + m
-                                end
-                                if h or m then
-                                    tinsert(BG.itemGuoQiFrame.tbl, { time = time, link = link, itemID = itemID, b = b, i = i })
+                                local remainingMinutes = ParseTradeTimeRemaining(time)
+                                if remainingMinutes then
+                                    tinsert(BG.itemGuoQiFrame.tbl,
+                                        { time = remainingMinutes, link = link, itemID = itemID, b = b, i = i })
                                 end
                                 break
                             end

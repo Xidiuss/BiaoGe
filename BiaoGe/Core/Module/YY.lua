@@ -1651,7 +1651,7 @@ BG.Init(function()
         -- 进了副本则失效
         BG.RegisterEvent("RAID_INSTANCE_WELCOME", function()
             if not starttime then return end
-            local FBID = select(8, GetInstanceInfo()) -- 获取副本ID
+            local FBID = BG.GetCurrentSupportedInstanceID() -- 获取副本ID
             for id in pairs(BG.FBIDtable) do
                 if tonumber(FBID) == tonumber(id) then
                     starttime = nil

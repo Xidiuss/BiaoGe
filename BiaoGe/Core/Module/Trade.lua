@@ -2766,26 +2766,44 @@ BG.Init(function()
         end
 
         -- 交易成功后，把拍卖记录设为已交易
-        function T.SetItemTradeState()
-            local FB = BG.FB2 or BG.FB1
-            if IsInRaid(1) and BiaoGe[FB].auctionLog then
-                local tradeName, tradeTbl
-                if BG.ImML() then
-                    tradeName = BG.trade.target
-                    tradeTbl = BG.trade.playeritems
-                else
-                    tradeName = BG.trade.player
-                    tradeTbl = BG.trade.targetitems
-                end
-                for _, vv in ipairs(tradeTbl) do
-                    for _, v in ipairs(BiaoGe[FB].auctionLog) do
-                        if v.type == 1 and not v.trade and v.maijia == tradeName and
-                            GetItemID(v.zhuangbei) == GetItemID(vv.link) then
-                            v.trade = true
-                            break
-                        end
+        local function FindAuctionTradeRecord(tradeName, link)
+            local itemID = GetItemID(link)
+            if not (tradeName and itemID) then return end
+            local newest
+            for _, FB in ipairs(BG.FBtable) do
+                local auctionLog = BiaoGe[FB] and BiaoGe[FB].auctionLog
+                for _, v in ipairs(auctionLog or {}) do
+                    if v.type == 1 and not v.trade and
+                        BG.GSN(v.maijia) == BG.GSN(tradeName) and
+                        GetItemID(v.zhuangbei) == itemID and
+                        (not newest or (tonumber(v.time) or 0) > (tonumber(newest.time) or 0))
+                    then
+                        newest = v
                     end
                 end
+            end
+            return newest
+        end
+
+        function T.SetItemTradeState()
+            local tradeName, tradeTbl
+            if BG.ImML() then
+                tradeName = BG.trade.target
+                tradeTbl = BG.trade.playeritems
+            else
+                tradeName = BG.trade.player
+                tradeTbl = BG.trade.targetitems
+            end
+            local changed
+            for _, vv in ipairs(tradeTbl or {}) do
+                for _ = 1, (vv.count or 1) do
+                    local record = FindAuctionTradeRecord(tradeName, vv.link)
+                    if not record then break end
+                    record.trade = true
+                    changed = true
+                end
+            end
+            if changed then
                 BG.UpdateAuctionLogFrame(true, true)
             end
         end

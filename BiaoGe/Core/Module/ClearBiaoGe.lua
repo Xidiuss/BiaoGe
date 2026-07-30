@@ -235,7 +235,8 @@ function BG.ClearBiaoGeUI()
         local needCheck
         local function CheckCD()
             BG.After(3, function()
-                local _, _, _, _, maxPlayers, _, _, instanceID = GetInstanceInfo()
+                local _, _, _, _, maxPlayers = GetInstanceInfo()
+                local instanceID = BG.GetCurrentSupportedInstanceID()
                 local FB = BG.FBIDtable[instanceID]
                 SendTips(FB)
                 if BG.IsTBCFB(FB) and not ns.canShowTBC then return end

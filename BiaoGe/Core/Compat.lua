@@ -618,16 +618,35 @@ end
 -- Primary fix: wrap SetItemRef to skip garrmission: before native processing.
 -- Native SetItemRef crashes at ItemRef.lua:190 (arithmetic on nil startLink)
 -- for unrecognised link types, even when SetHyperlink is guarded. Wrapping
--- SetItemRef in Compat.lua (before module load) means BiaoGe's own
--- hooksecurefunc("SetItemRef", ...) handlers still fire after this wrapper
--- returns — click actions (open DuiZhang panel etc.) are preserved.
+-- SetItemRef in Compat.lua (before module load) dispatches registered BiaoGe
+-- actions directly before returning; target-client post-hooks are not reliable
+-- after this intentional early return.
 -- Defense-in-depth: also guard SetHyperlink for addons that call it directly
 -- (LibExtraTip, Aux-addon bypass SetItemRef entirely).
 do
+    local customLinkHandlers = {}
+
+    function ns.RegisterCustomLinkHandler(action, handler)
+        if type(action) == "string" and type(handler) == "function" then
+            customLinkHandlers[action] = handler
+        end
+    end
+
+    function ns.DispatchCustomLink(link, text, button, chatFrame)
+        if type(link) ~= "string" then return false end
+        local linkType, action = strsplit(":", link)
+        if linkType ~= "garrmission" then return false end
+        local handler = customLinkHandlers[action]
+        if not handler then return false end
+        handler(link, text, button, chatFrame)
+        return true
+    end
+
     local origSetItemRef = SetItemRef
     if origSetItemRef then
         SetItemRef = function(link, text, button, chatFrame)
             if type(link) == "string" and link:sub(1, 12) == "garrmission:" then
+                ns.DispatchCustomLink(link, text, button, chatFrame)
                 return
             end
             return origSetItemRef(link, text, button, chatFrame)
@@ -1007,6 +1026,24 @@ end
 
 if not IsMasterLooter then
     function IsMasterLooter()
+        local lootMethod, partyIndex, raidIndex = GetLootMethod()
+        if lootMethod == "master" or lootMethod == 2 then
+            if BG and BG.masterLooter and BG.playerName then
+                if BG.GSN then
+                    return BG.GSN(BG.masterLooter) == BG.GSN(BG.playerName)
+                end
+                return BG.masterLooter == BG.playerName
+            end
+            if partyIndex == 0 then
+                return true
+            end
+            if raidIndex and UnitIsUnit then
+                return UnitIsUnit("player", "raid" .. raidIndex)
+            end
+            if partyIndex and UnitIsUnit then
+                return UnitIsUnit("player", "party" .. partyIndex)
+            end
+        end
         return false
     end
 end
@@ -1179,6 +1216,22 @@ do
             [249] = "Onyxia's Lair",
             [724] = "The Ruby Sanctum",
             [624] = "Vault of Archavon",
+            [574] = "Utgarde Keep",
+            [575] = "Utgarde Pinnacle",
+            [576] = "The Nexus",
+            [578] = "The Oculus",
+            [595] = "The Culling of Stratholme",
+            [599] = "Halls of Stone",
+            [600] = "Drak'Tharon Keep",
+            [601] = "Azjol-Nerub",
+            [602] = "Halls of Lightning",
+            [604] = "Gundrak",
+            [608] = "The Violet Hold",
+            [619] = "Ahn'kahet: The Old Kingdom",
+            [632] = "The Forge of Souls",
+            [650] = "Trial of the Champion",
+            [658] = "Pit of Saron",
+            [668] = "Halls of Reflection",
             -- TBC instances
             [532] = "Karazhan",
             [565] = "Gruul's Lair",

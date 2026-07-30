@@ -529,14 +529,10 @@ BG.Init(function()
             })
             f:SetBackdropColor(0.5, 0, 0, 0.5)
             f:SetBackdropBorderColor(1, 0, 0, .5)
-            f:SetSize(150, 25)
-            if TradeRecipientMoneyBg then
-                f:SetPoint("BOTTOM", TradeRecipientMoneyBg, "TOP", 0, 3)
-                f:SetFrameLevel(TradeRecipientMoneyBg:GetFrameLevel() + 10)
-            else
-                f:SetPoint("BOTTOM", TradeFrame, "TOP", 0, 3)
-                f:SetFrameLevel(8)
-            end
+            f:SetHeight(25)
+            f:SetPoint("BOTTOMLEFT", TradeFrame, "TOPLEFT", 0, 0)
+            f:SetPoint("BOTTOMRIGHT", TradeFrame, "TOPRIGHT", 0, 0)
+            f:SetFrameLevel((TradeRecipientMoneyBg and TradeRecipientMoneyBg:GetFrameLevel() or 5) + 10)
             f:SetToplevel(true)
             f:EnableMouse(true)
 
@@ -574,19 +570,32 @@ BG.Init(function()
             end)
             BG.tradeQianKuanEdit = edit
 
-            local text = edit:CreateFontString()
+            local text = f:CreateFontString()
+            text:SetPoint("LEFT", f, "LEFT", 8, 0)
             text:SetPoint("RIGHT", edit, "LEFT", -8, 0)
             text:SetFont(BIAOGE_TEXT_FONT, 14, "OUTLINE")
             text:SetTextColor(RGB("FF0000"))
             text:SetText(L["欠款："])
             text:SetWordWrap(false)
-            text:SetWidth(text:GetStringWidth())
-            text:SetJustifyH("RIGHT")
-            f:SetWidth(edit:GetWidth() + text:GetWidth() + 18)
+            text:SetJustifyH("LEFT")
+
+            function BG.tradeQianKuanEdit:SetDebt(money)
+                money = tonumber(money) or 0
+                if not (BiaoGe.options["autoTrade"] == 1 and IsInRaid(1) and not BG.IsAutoCreateBill()) then
+                    money = 0
+                end
+                self:ClearFocus()
+                if money > 0 then
+                    self.frame:Show()
+                    self:SetText(money)
+                else
+                    self:SetText("")
+                    self.frame:Hide()
+                end
+            end
 
             function BG.tradeQianKuanEdit:Update()
-                self.frame:SetShown(BiaoGe.options["autoTrade"] == 1 and IsInRaid(1) and not BG.IsAutoCreateBill())
-                self:SetText("")
+                self:SetDebt(0)
             end
 
             _G.TradeFrame:HookScript("OnMouseDown", function(self, enter)
@@ -603,7 +612,7 @@ BG.Init(function()
             })
             f:SetBackdropColor(0, 0, 0, 0)
             f:SetBackdropBorderColor(1, 0, 0, 1)
-            f:SetPoint("BOTTOMRIGHT", TradeRecipientMoneyBg, "TOPRIGHT", 0, 0)
+            f:SetPoint("BOTTOMRIGHT", BG.tradeQianKuanEdit.frame, "TOPRIGHT", 0, 2)
             f:SetFrameStrata("HIGH")
             BG.tradeGoldTop = f
             local t = f:CreateFontString()
@@ -635,7 +644,7 @@ BG.Init(function()
             local f = CreateFrame("Frame", nil, TradeFrame)
             f:SetFrameStrata("HIGH")
             local t = f:CreateFontString()
-            t:SetPoint("RIGHT", BG.tradeQianKuanEdit.frame, "LEFT", -20, 0)
+            t:SetPoint("BOTTOMLEFT", BG.tradeQianKuanEdit.frame, "TOPLEFT", 0, 2)
             t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
             t:SetTextColor(RGB(BG.r1))
             t:SetText(L["重复交易！"])
@@ -2377,6 +2386,10 @@ BG.Init(function()
 
         -- 创建应收/应付对象
         do
+            local function FormatTradeMoney(money)
+                return BG.FormatNumber(tonumber(money) or 0, 2) .. goldTex
+            end
+
             local f = CreateFrame("Frame", nil, TradeFrame)
             f:SetFrameStrata("HIGH")
             local text = f:CreateFontString()
@@ -2398,6 +2411,7 @@ BG.Init(function()
                 text:SetFont(BIAOGE_TEXT_FONT, 12, "OUTLINE")
                 text:SetJustifyH("LEFT")
                 text:SetWidth(_G["TradePlayerItem" .. i .. "Name"]:GetWidth())
+                text:SetWordWrap(false)
                 text:Hide()
                 itemButton.moneyText = text
 
@@ -2407,6 +2421,7 @@ BG.Init(function()
                 text:SetFont(BIAOGE_TEXT_FONT, 12, "OUTLINE")
                 text:SetJustifyH("LEFT")
                 text:SetWidth(_G["TradeRecipientItem" .. i .. "Name"]:GetWidth())
+                text:SetWordWrap(false)
                 text:Hide()
                 itemButton.moneyText = text
             end
@@ -2537,12 +2552,7 @@ BG.Init(function()
             local targetMoney = GetTargetTradeMoney()
             if targetMoney then
                 targetMoney = math.modf(targetMoney / 10000)
-                local m = sumTargetMoney - targetMoney
-                if m <= 0 then
-                    m = ""
-                end
-                BG.tradeQianKuanEdit:ClearFocus()
-                BG.tradeQianKuanEdit:SetText(m)
+                BG.tradeQianKuanEdit:SetDebt(sumTargetMoney - targetMoney)
             end
         end
         local function UpdateMyQianKuan()
@@ -2550,12 +2560,7 @@ BG.Init(function()
             local playerMoney = GetPlayerTradeMoney()
             if playerMoney then
                 playerMoney = math.modf(playerMoney / 10000)
-                local m = sumPlayerMoney - playerMoney
-                if m <= 0 then
-                    m = ""
-                end
-                BG.tradeQianKuanEdit:ClearFocus()
-                BG.tradeQianKuanEdit:SetText(m)
+                BG.tradeQianKuanEdit:SetDebt(sumPlayerMoney - playerMoney)
             end
         end
         local function MLAcceptTrade()
@@ -2782,7 +2787,7 @@ BG.Init(function()
                                 sumTargetMoney = sumTargetMoney + money
                                 if BiaoGe.options["autoAuctionMoney"] == 1 then
                                     _G["TradePlayerItem" .. i .. "ItemButton"].moneyText:Show()
-                                    _G["TradePlayerItem" .. i .. "ItemButton"].moneyText:SetText(L["应收："] .. GetMoneyString(tonumber(money .. "0000")))
+                                    _G["TradePlayerItem" .. i .. "ItemButton"].moneyText:SetText(L["应收："] .. FormatTradeMoney(money))
                                     _G["TradePlayerItem" .. i .. "ItemButton"].moneyText.money = money
                                 end
                                 break
@@ -2794,7 +2799,7 @@ BG.Init(function()
             if BiaoGe.options["autoAuctionMoney"] == 1 then
                 if sumTargetMoney ~= 0 then
                     BG.trade.GiveMeMoneyText:Show()
-                    BG.trade.GiveMeMoneyText:SetText(L["合计应收："] .. GetMoneyString(tonumber(sumTargetMoney .. "0000")))
+                    BG.trade.GiveMeMoneyText:SetText(L["合计应收："] .. FormatTradeMoney(sumTargetMoney))
                     UpdateGiveMeMoneyTextColor()
                     CheckItemIsNotAutoAuction()
                 end
@@ -2822,7 +2827,7 @@ BG.Init(function()
                                 sumPlayerMoney = sumPlayerMoney + money
                                 if BiaoGe.options["autoAuctionMoney"] == 1 then
                                     _G["TradeRecipientItem" .. i .. "ItemButton"].moneyText:Show()
-                                    _G["TradeRecipientItem" .. i .. "ItemButton"].moneyText:SetText(L["应付："] .. GetMoneyString(tonumber(money .. "0000")))
+                                    _G["TradeRecipientItem" .. i .. "ItemButton"].moneyText:SetText(L["应付："] .. FormatTradeMoney(money))
                                     _G["TradeRecipientItem" .. i .. "ItemButton"].moneyText.money = money
                                 end
                                 break
@@ -2839,7 +2844,7 @@ BG.Init(function()
                         BG.ShowAutoShowTradeCopyMoneyButton()
                     end
                     BG.trade.GiveYouMoneyText:Show()
-                    BG.trade.GiveYouMoneyText:SetText(L["合计应付："] .. GetMoneyString(tonumber(sumPlayerMoney .. "0000")))
+                    BG.trade.GiveYouMoneyText:SetText(L["合计应付："] .. FormatTradeMoney(sumPlayerMoney))
                     UpdateGiveYouMoneyTextColor()
                     CheckItemIsNotAutoAuction()
                 end

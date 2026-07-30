@@ -465,13 +465,47 @@ if ($tradePreviewReset -notmatch 'IsInRaid\(1\)\s+and\s+not BG\.IsAutoCreateBill
     $failures += "Accounting Preview Reset must suppress automatic-bill raid members just like Update."
 }
 foreach ($marker in @(
-    'text:SetWordWrap(false)',
-    'text:SetWidth(text:GetStringWidth())',
-    'f:SetWidth(edit:GetWidth() + text:GetWidth() + 18)'
+    'f:SetPoint("BOTTOMLEFT", TradeFrame, "TOPLEFT", 0, 0)',
+    'f:SetPoint("BOTTOMRIGHT", TradeFrame, "TOPRIGHT", 0, 0)',
+    'text:SetPoint("LEFT", f, "LEFT", 8, 0)',
+    'text:SetPoint("RIGHT", edit, "LEFT", -8, 0)',
+    'text:SetWordWrap(false)'
 )) {
     if (-not $tradeText.Contains($marker)) {
         $failures += "Trade preview localization/layout is missing marker: $marker"
     }
+}
+foreach ($marker in @(
+    'function BG.tradeQianKuanEdit:SetDebt(money)',
+    'if money > 0 then',
+    'self.frame:Show()',
+    'self.frame:Hide()',
+    'BG.tradeQianKuanEdit:SetDebt(sumTargetMoney - targetMoney)',
+    'BG.tradeQianKuanEdit:SetDebt(sumPlayerMoney - playerMoney)'
+)) {
+    if (-not $tradeText.Contains($marker)) {
+        $failures += "Amount owed positive/zero state boundary is missing marker: $marker"
+    }
+}
+if ($tradeText -match 'f:SetSize\(150,\s*25\)') {
+    $failures += "Amount owed must not retain the clipped fixed-width container."
+}
+
+$auctionMoneyBlock = Get-Block `
+    -Text $tradeText `
+    -StartPattern 'BG\.tradeAutoPickItem\s*=\s*\{\}' `
+    -EndPattern '\n\s*local sumTargetMoney\s*=' `
+    -Description "automatic-auction trade money renderers"
+foreach ($marker in @(
+    'local function FormatTradeMoney(money)',
+    'BG.FormatNumber(tonumber(money) or 0, 2) .. goldTex'
+)) {
+    if (-not $auctionMoneyBlock.Contains($marker)) {
+        $failures += "WotLK-safe trade money renderer is missing marker: $marker"
+    }
+}
+if ($auctionMoneyBlock -match 'GetMoneyString\(') {
+    $failures += "Automatic-auction trade overlays must not emit GetMoneyString texture markup."
 }
 $refundKey = [regex]::Match(
     $tradeText,

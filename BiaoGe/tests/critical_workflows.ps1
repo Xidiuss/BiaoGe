@@ -337,14 +337,19 @@ foreach ($traceMarker in @(
 }
 
 # Runtime Gate 3 L10: WotLK has no ENCOUNTER_START/END payload contract.
-# Capture the boss row from boss units and use the loot DB only when it gives
-# one unambiguous source instead of guessing the first shared-drop match.
+# Capture the boss row from boss units or an exact post-kill combat-log name,
+# and use the loot DB only when it gives one unambiguous source instead of
+# guessing the first shared-drop match.
 foreach ($marker in @(
     'f:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")',
+    'local function SetBossIndexByName(',
     'local function SetBossIndexFromUnits(',
     'local unit = "boss" .. i',
     'local unitName = UnitName(unit)',
-    'bossInfo.name2 == unitName',
+    'SetBossIndexByName(FB, unitName)',
+    'BG.RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED"',
+    'if subEvent ~= "UNIT_DIED" then return end',
+    'SetBossIndexByName(FB, destName, true)',
     'BG.RegisterEvent("PLAYER_REGEN_ENABLED"',
     'local function GetBossIndexByLootItem(',
     'local difficultyID = GetRaidDifficultyID and GetRaidDifficultyID()',
@@ -358,6 +363,17 @@ foreach ($marker in @(
 }
 if ($lootText -match '(?s)GetBossIndexByLootItem\(.*?return candidates\[1\].*?#candidates') {
     $failures += "Loot DB fallback must prove uniqueness before selecting a boss row."
+}
+$bossNameMatcher = Get-Block `
+    -Text $lootText `
+    -StartPattern 'local function SetBossIndexByName\(' `
+    -EndPattern '\n\s*local function SetBossIndexFromUnits\(' `
+    -Description "the exact boss-name matcher"
+if ($bossNameMatcher -notmatch 'bossInfo\.name2\s*==\s*bossName') {
+    $failures += "Boss combat-log routing must require an exact localized Tables boss name."
+}
+if ($bossNameMatcher -match 'find\(|match\(|lower\(') {
+    $failures += "Boss combat-log routing must not guess with fuzzy or partial boss-name matching."
 }
 
 # Runtime Gate 1: WotLK master-looter ownership must not be permanently false.
@@ -465,8 +481,8 @@ if ($tradePreviewReset -notmatch 'IsInRaid\(1\)\s+and\s+not BG\.IsAutoCreateBill
     $failures += "Accounting Preview Reset must suppress automatic-bill raid members just like Update."
 }
 foreach ($marker in @(
-    'f:SetPoint("BOTTOMLEFT", TradeFrame, "TOPLEFT", 0, 0)',
-    'f:SetPoint("BOTTOMRIGHT", TradeFrame, "TOPRIGHT", 0, 0)',
+    'f:SetPoint("BOTTOMLEFT", TradeFrame, "TOPLEFT", 7, 0)',
+    'f:SetPoint("BOTTOMRIGHT", TradeFrame, "TOPRIGHT", -17, 0)',
     'text:SetPoint("LEFT", f, "LEFT", 8, 0)',
     'text:SetPoint("RIGHT", edit, "LEFT", -8, 0)',
     'text:SetWordWrap(false)'
@@ -489,6 +505,39 @@ foreach ($marker in @(
 }
 if ($tradeText -match 'f:SetSize\(150,\s*25\)') {
     $failures += "Amount owed must not retain the clipped fixed-width container."
+}
+if ($tradeText.Contains('f:SetPoint("BOTTOMLEFT", TradeFrame, "TOPLEFT", 0, 0)') -or
+    $tradeText.Contains('f:SetPoint("BOTTOMRIGHT", TradeFrame, "TOPRIGHT", 0, 0)')) {
+    $failures += "Amount owed must not follow TradeFrame's transparent outer horizontal margins."
+}
+
+$playerSlotHandler = Get-Block `
+    -Text $tradeText `
+    -StartPattern 'BG\.RegisterEvent\("TRADE_PLAYER_ITEM_CHANGED"' `
+    -EndPattern '\n\s*BG\.RegisterEvent\("TRADE_TARGET_ITEM_CHANGED"' `
+    -Description "the master-looter item-slot renderer"
+$targetSlotHandler = Get-Block `
+    -Text $tradeText `
+    -StartPattern 'BG\.RegisterEvent\("TRADE_TARGET_ITEM_CHANGED"' `
+    -EndPattern '\n\s*BG\.RegisterEvent\("TRADE_MONEY_CHANGED"' `
+    -Description "the raid-member item-slot renderer"
+foreach ($handler in @(
+    @{
+        Name = "master-looter"
+        Text = $playerSlotHandler
+        Guard = 'if not BG.ImML() then return end'
+    },
+    @{
+        Name = "raid-member"
+        Text = $targetSlotHandler
+        Guard = 'if BG.ImML() then return end'
+    }
+)) {
+    $guardIndex = $handler.Text.IndexOf($handler.Guard)
+    $resetIndex = $handler.Text.IndexOf('BG.ResetAuctionTradeMoneyText()')
+    if ($guardIndex -lt 0 -or $resetIndex -lt 0 -or $guardIndex -gt $resetIndex) {
+        $failures += "$($handler.Name) role guard must run before clearing active auction payment overlays."
+    }
 }
 
 $auctionMoneyBlock = Get-Block `
@@ -558,8 +607,44 @@ foreach ($forbidden in @(
         $failures += "Automatic-auction accounting still depends on volatile trade presentation state: $forbidden"
     }
 }
-if ($tradeText -notmatch '(?s)if next\(BG\.trade\.autoAuction\) then.*?local money = v\.money.*?return returnText.*?local isFirstItem = true') {
+if ($tradeText -notmatch '(?s)if next\(BG\.trade\.autoAuction\) then.*?local money = v\.money.*?return table\.concat\(returnTexts, NN\).*?local isFirstItem = true') {
     $failures += "Per-auction persistence must remain ahead of the genuine generic PackingDeal fallback."
+}
+
+$tradeSuccessBuilder = Get-Block `
+    -Text $tradeText `
+    -StartPattern 'local function BuildTradeSuccessText\(' `
+    -EndPattern '\n\s*function BG\.GetTradeSeeText\(saved\)' `
+    -Description "the canonical detailed trade-success renderer"
+foreach ($marker in @(
+    'GetItemInfoInstant(GetItemID(link))',
+    'AddTexture(icon) .. link',
+    'SetClassCFF(player)',
+    'money',
+    'qiankuanText',
+    'bossInfo.color',
+    'bossInfo.name2'
+)) {
+    if (-not $tradeSuccessBuilder.Contains($marker)) {
+        $failures += "Detailed trade-success renderer is missing field: $marker"
+    }
+}
+$automaticPreview = Get-Block `
+    -Text $tradeText `
+    -StartPattern 'if next\(BG\.trade\.autoAuction\) then' `
+    -EndPattern '\n\s*local Items, Money, Items2, Money2, Player' `
+    -Description "the automatic-auction preview/persistence branch"
+foreach ($marker in @(
+    'BuildTradeSuccessText(FB, link, player, money, qiankuanText, b)',
+    'tinsert(returnTexts,',
+    'return table.concat(returnTexts, NN)'
+)) {
+    if (-not $automaticPreview.Contains($marker)) {
+        $failures += "Automatic-auction preview must preserve detailed per-record accounting: $marker"
+    }
+}
+if (-not $tradeText.Contains('BG.tradeSeeFrame.text:GetStringHeight()')) {
+    $failures += "Accounting Preview must measure detailed multi-auction content instead of clipping it at the fixed minimum height."
 }
 $refundKey = [regex]::Match(
     $tradeText,

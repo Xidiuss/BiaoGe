@@ -255,21 +255,38 @@ BG.Init(function()
             return 5
         end
     end
+    local function CaptureBossKill(FB)
+        BiaoGe[FB].raidRoster = { time = GetServerTime(), realm = BG.realmName, roster = {} }
+        for _, v in ipairs(BG.raidRosterInfo) do
+            tinsert(BiaoGe[FB].raidRoster.roster, v.name)
+        end
+        NotLootRemind()
+    end
+    local function SetBossIndexByName(FB, bossName, encounterEnded)
+        if not (FB and bossName and BG.Boss[FB]) then return end
+        for bossIndex = 1, Maxb[FB] - 2 do
+            local bossInfo = BG.Boss[FB]["boss" .. bossIndex]
+            if bossInfo and bossInfo.name2 == bossName then
+                numb = bossIndex
+                lasttime = GetTime()
+                if encounterEnded then
+                    start = nil
+                    CaptureBossKill(FB)
+                else
+                    start = true
+                end
+                return bossIndex
+            end
+        end
+    end
     local function SetBossIndexFromUnits(FB)
         if not (FB and BG.Boss[FB]) then return end
         for i = 1, (MAX_BOSS_FRAMES or 5) do
             local unit = "boss" .. i
             local unitName = UnitName(unit)
             if unitName then
-                for bossIndex = 1, Maxb[FB] - 2 do
-                    local bossInfo = BG.Boss[FB]["boss" .. bossIndex]
-                    if bossInfo and bossInfo.name2 == unitName then
-                        numb = bossIndex
-                        lasttime = GetTime()
-                        start = true
-                        return bossIndex
-                    end
-                end
+                local bossIndex = SetBossIndexByName(FB, unitName)
+                if bossIndex then return bossIndex end
             end
         end
     end
@@ -309,11 +326,7 @@ BG.Init(function()
                         numb = _numb
                         lasttime = GetTime()
                         start = nil
-                        BiaoGe[FB].raidRoster = { time = GetServerTime(), realm = BG.realmName, roster = {} }
-                        for i, v in ipairs(BG.raidRosterInfo) do
-                            tinsert(BiaoGe[FB].raidRoster.roster, v.name)
-                        end
-                        NotLootRemind()
+                        CaptureBossKill(FB)
                     end
                 end
             else
@@ -321,6 +334,13 @@ BG.Init(function()
                 start = nil
             end
         end
+    end)
+    BG.RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED", function(self, event, ...)
+        local _, subEvent, _, _, _, _, _, _, destName = ...
+        if subEvent ~= "UNIT_DIED" then return end
+        local FB = BG.FB2
+        if not FB then return end
+        SetBossIndexByName(FB, destName, true)
     end)
     BG.RegisterEvent("PLAYER_REGEN_ENABLED", function(self, event)
         if start then

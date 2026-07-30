@@ -244,6 +244,19 @@ BG.Init(function()
             end
         end
 
+        local function BuildTradeSuccessText(FB, link, player, money, qiankuanText, b)
+            local icon = select(5, GetItemInfoInstant(GetItemID(link)))
+            local bossInfo = BG.Boss[FB]["boss" .. b]
+            return format("|cff00BFFF" ..
+                L["< 交易记账成功 >|r\n装备：%s\n买家：%s\n金额：%s%d|rg%s\nBoss：%s%s|r"],
+                AddTexture(icon) .. link,
+                SetClassCFF(player), "|cffFFD700",
+                money,
+                qiankuanText,
+                "|cff" .. bossInfo.color,
+                bossInfo.name2)
+        end
+
         function BG.GetTradeSeeText(saved)
             local FB = BG.FB1
             local target = BG.trade.target
@@ -364,7 +377,7 @@ BG.Init(function()
 
             -- 使用自动拍卖的记账
             if next(BG.trade.autoAuction) then
-                local returnText = ""
+                local returnTexts = {}
                 for _, v in ipairs(BG.trade.autoAuction) do
                     local b = v.b
                     local i = v.i
@@ -373,12 +386,12 @@ BG.Init(function()
                     local player = v.player
                     local money = v.money
                     local qiankuan = v.qiankuan
-                    local icon = select(5, GetItemInfoInstant(itemID))
                     local qiankuanText = ""
                     if qiankuan > 0 then
                         qiankuanText = format("|cffFF0000" .. L["（欠款%d）"] .. RR, qiankuan)
                     end
-                    returnText = returnText .. AddTexture(icon) .. " |cffFFD700" .. money .. "|rg" .. qiankuanText .. "\n"
+                    tinsert(returnTexts,
+                        BuildTradeSuccessText(FB, link, player, money, qiankuanText, b))
                     if saved then
                         -- 保存买家信息
                         BG.Frame[FB]["boss" .. b]["maijia" .. i]:SetText(player)
@@ -415,7 +428,7 @@ BG.Init(function()
                     end
                 end
                 BG.tradeSeeFrame.frame:SetGreenColor()
-                return returnText
+                return table.concat(returnTexts, NN)
             end
 
             -- 非自动拍卖的记账
@@ -487,15 +500,9 @@ BG.Init(function()
                                         end
                                     end
                                     if isFirstItem then
-                                        local Texture = select(10, GetItemInfo(Items[items].link))
-                                        returntext = (format("|cff00BFFF" ..
-                                            L["< 交易记账成功 >|r\n装备：%s\n买家：%s\n金额：%s%d|rg%s\nBoss：%s%s|r"],
-                                            (AddTexture(Texture) .. Items[items].link),
-                                            SetClassCFF(Player), "|cffFFD700",
-                                            Money + qiankuan,
-                                            qiankuantext,
-                                            "|cff" .. BG.Boss[FB]["boss" .. b]["color"],
-                                            BG.Boss[FB]["boss" .. b]["name2"]))
+                                        returntext = BuildTradeSuccessText(
+                                            FB, Items[items].link, Player,
+                                            Money + qiankuan, qiankuantext, b)
                                     elseif not strfind(returntext, L["（剩余装备记录为打包交易）"]) then
                                         returntext = returntext .. NN .. BG.STC_dis(L["（剩余装备记录为打包交易）"])
                                     end
@@ -533,8 +540,8 @@ BG.Init(function()
             f:SetBackdropColor(0.5, 0, 0, 0.5)
             f:SetBackdropBorderColor(1, 0, 0, .5)
             f:SetHeight(25)
-            f:SetPoint("BOTTOMLEFT", TradeFrame, "TOPLEFT", 0, 0)
-            f:SetPoint("BOTTOMRIGHT", TradeFrame, "TOPRIGHT", 0, 0)
+            f:SetPoint("BOTTOMLEFT", TradeFrame, "TOPLEFT", 7, 0)
+            f:SetPoint("BOTTOMRIGHT", TradeFrame, "TOPRIGHT", -17, 0)
             f:SetFrameLevel((TradeRecipientMoneyBg and TradeRecipientMoneyBg:GetFrameLevel() or 5) + 10)
             f:SetToplevel(true)
             f:EnableMouse(true)
@@ -1300,6 +1307,7 @@ BG.Init(function()
 
             function BG.tradeSeeFrame.frame:Reset()
                 self:Hide()
+                self:SetHeight(150)
                 if BiaoGe.options["autoTrade"] == 1 and BiaoGe.options["tradePreview"] == 1
                     and IsInRaid(1) and not BG.IsAutoCreateBill()
                 then
@@ -1317,7 +1325,9 @@ BG.Init(function()
                     self:Show()
                     BG.tradeSeeFrame.fakuanButton:UpdateShow()
                     BG.tradeSeeFrame.refundButton:UpdateShow()
-                    BG.tradeSeeFrame.text:SetText(BG.GetTradeSeeText())
+                    local previewText = BG.GetTradeSeeText()
+                    BG.tradeSeeFrame.text:SetText(previewText)
+                    self:SetHeight(max(150, BG.tradeSeeFrame.text:GetStringHeight() + 80))
                 end
             end
 
@@ -2756,10 +2766,10 @@ BG.Init(function()
 
         -- 团长
         BG.RegisterEvent("TRADE_PLAYER_ITEM_CHANGED", function(self, ...)
-            sumTargetMoney = 0
-            BG.ResetAuctionTradeMoneyText()
             if not IsInRaid(1) then return end
             if not BG.ImML() then return end
+            sumTargetMoney = 0
+            BG.ResetAuctionTradeMoneyText()
             local tradeName = BG.GN("NPC")
             if not (BG.auctionTrade[tradeName] and next(BG.auctionTrade[tradeName])) then return end
             local haveItem = {}
@@ -2796,10 +2806,10 @@ BG.Init(function()
 
         -- 团员
         BG.RegisterEvent("TRADE_TARGET_ITEM_CHANGED", function(self, ...)
-            sumPlayerMoney = 0
-            BG.ResetAuctionTradeMoneyText()
             if not IsInRaid(1) then return end
             if BG.ImML() then return end
+            sumPlayerMoney = 0
+            BG.ResetAuctionTradeMoneyText()
             local tradeName = player
             if not (BG.auctionTrade[tradeName] and next(BG.auctionTrade[tradeName])) then return end
             local haveItem = {}

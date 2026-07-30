@@ -480,6 +480,14 @@ $refundKey = [regex]::Match(
 if (-not $refundKey.Success -or
     -not $localeText.Contains('L["' + $refundKey.Groups[1].Value + '"]')) {
     $failures += "The Return item checkbox must use an enUS-defined localization key."
+} else {
+    $refundEnglish = [regex]::Match(
+        $localeText,
+        'L\["' + [regex]::Escape($refundKey.Groups[1].Value) + '"\]\s*=\s*"([^"]+)"'
+    )
+    if (-not $refundEnglish.Success -or $refundEnglish.Groups[1].Value -ne "Return item") {
+        $failures += "The concise enUS refund action must read 'Return item'."
+    }
 }
 $automaticDebt = [regex]::Match(
     $tradeText,
@@ -488,6 +496,30 @@ $automaticDebt = [regex]::Match(
 if (-not $automaticDebt.Success -or
     -not $localeText.Contains('L["' + $automaticDebt.Groups[1].Value + '"]')) {
     $failures += "The automatic-auction debt suffix must color an enUS-defined plain localization key."
+}
+
+# Post-trade return gate D: both clients already own the successful trade
+# snapshot. They must apply the same local reversal without inventing a new
+# addon-message protocol, and the reversed sale must become Unauctioned
+# rather than polluting the duplicate/error Re-auction projection.
+foreach ($marker in @(
+    'local function FindReturnedTableItem(Player, link)',
+    'local function RemoveReturnedAuctionRecord(returned)',
+    'local function FinalizeReturnedItem(returned)',
+    'returned.buyer:Clear()',
+    'returned.money:Clear()',
+    'returned.money:ClearQK()',
+    'tremove(BiaoGe[returned.FB].auctionLog, newestIndex)',
+    'if #BG.trade.playeritems == 1 and BG.IsMLByName(BG.trade.target) then',
+    'local returned = FindReturnedTableItem(BG.playerName, BG.trade.playeritems[1].link)',
+    'FinalizeReturnedItem(returned)'
+)) {
+    if (-not $tradeText.Contains($marker)) {
+        $failures += "Cross-client returned-item finalization is missing marker: $marker"
+    }
+}
+if ($tradeText -match 'SendAddonMessage\([^,\r\n]+,\s*"[^"]*[Rr]eturn') {
+    $failures += "Returned-item synchronization must use the existing local trade snapshot, not a new wire protocol."
 }
 
 # US3: cache readiness must cover the bundled seven-second ClassicAPI item

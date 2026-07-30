@@ -37,7 +37,7 @@ do
     L["重拍"] = "Re"
     L["表格快捷键"] = "Table Hotkey"
     L["角色总览快捷键"] = "Character Overview Hotkey"
-    L["本次交易记为退货"] = "Mark This Trade as Return"
+    L["本次交易记为退货"] = "Return item"
     L["（|cffFFD700%s|r-|cffff0000%s|r）"] = "（|cffFFD700%s|r-|cffff0000%s|r）"
     L["|cff00BFFF< 退货成功 >|r\n装备：%s\n退货人：%s\n应退金额：|cffFFD700%s|rg%s\nBoss：|cff%s%s"] = "|cff00BFFF< Return Successful >|r\nItem: %s\nReturner: %s\nRefund Amount: |cffFFD700%s|rg%s\nBoss: |cff%s%s"
     L["|cffDC143C< 退货失败 >|r\n表格里没找到此件装备"] = "|cffDC143C< Return Failed >|r\nItem not found in table"

@@ -43,6 +43,106 @@ local T = {}
 local goldTex = "|TInterface\\MoneyFrame\\UI-GoldIcon:14:14:2:0|t"
 
 BG.Init(function()
+    local function FindReturnedAuctionRecord(Player, itemID)
+        local newest
+        for _, FB in ipairs(BG.FBtable) do
+            for index, v in ipairs(BiaoGe[FB].auctionLog or {}) do
+                if v.type == 1
+                    and GetItemID(v.zhuangbei) == itemID
+                    and BG.GSN(v.maijia) == BG.GSN(Player)
+                then
+                    local traded = v.trade and 1 or 0
+                    local recordTime = tonumber(v.time) or 0
+                    if not newest
+                        or traded > newest.traded
+                        or (traded == newest.traded and recordTime >= newest.recordTime)
+                    then
+                        newest = {
+                            FB = FB,
+                            index = index,
+                            record = v,
+                            traded = traded,
+                            recordTime = recordTime,
+                        }
+                    end
+                end
+            end
+        end
+        return newest
+    end
+
+    local function FindReturnedTableItem(Player, link)
+        local itemID = GetItemID(link)
+        local shortPlayer = BG.GSN(Player)
+        if not (itemID and shortPlayer) then return end
+
+        local auction = FindReturnedAuctionRecord(Player, itemID)
+        local FB = auction and auction.FB or BG.FB1
+        local returned
+        local fallback
+        BG.PairFBItem(function(item, buyer, money, b, i)
+            if GetItemID(item:GetText()) == itemID and BG.GSN(buyer:GetText()) == shortPlayer then
+                local candidate = {
+                    FB = FB,
+                    b = b,
+                    i = i,
+                    itemID = itemID,
+                    item = item,
+                    buyer = buyer,
+                    money = money,
+                    Player = Player,
+                    auctionIndex = auction and auction.index,
+                    auctionRecord = auction and auction.record,
+                }
+                fallback = fallback or candidate
+                if not auction or tonumber(money:GetText()) == tonumber(auction.record.jine) then
+                    returned = candidate
+                    return true
+                end
+            end
+        end, nil, nil, FB)
+        return returned or fallback
+    end
+
+    local function RemoveReturnedAuctionRecord(returned)
+        local auctionLog = BiaoGe[returned.FB].auctionLog or {}
+        if returned.auctionIndex and auctionLog[returned.auctionIndex] == returned.auctionRecord then
+            tremove(BiaoGe[returned.FB].auctionLog, returned.auctionIndex)
+            if BG.UpdateAuctionLogFrame then
+                BG.UpdateAuctionLogFrame(true, true)
+            end
+            return
+        end
+
+        local newestIndex
+        local newestTime = -1
+        for index, v in ipairs(auctionLog) do
+            if v.type == 1
+                and GetItemID(v.zhuangbei) == returned.itemID
+                and BG.GSN(v.maijia) == BG.GSN(returned.Player)
+            then
+                local recordTime = tonumber(v.time) or 0
+                if recordTime >= newestTime then
+                    newestIndex = index
+                    newestTime = recordTime
+                end
+            end
+        end
+        if newestIndex then
+            tremove(BiaoGe[returned.FB].auctionLog, newestIndex)
+            if BG.UpdateAuctionLogFrame then
+                BG.UpdateAuctionLogFrame(true, true)
+            end
+        end
+    end
+
+    local function FinalizeReturnedItem(returned)
+        returned.buyer:Clear()
+        returned.money:Clear()
+        returned.money:ClearQK()
+        RemoveReturnedAuctionRecord(returned)
+    end
+
     -- 交易自动记录买家和金额
     do
         function BG.ResetTradeInfo()
@@ -233,34 +333,27 @@ BG.Init(function()
                     return returntext
                 end
                 local targetItem = items[1]
-                local itemID = GetItemID(targetItem.link)
-                local hasItem
-                BG.PairFBItem(function(item, buyer, money, b, i)
-                    local _item = item:GetText()
-                    local _buyer = buyer:GetText()
-                    local _money = money:GetText()
-                    if itemID == GetItemID(_item) and Player == _buyer then
-                        local QKmoney = tonumber(BiaoGe[FB]["boss" .. b]["qiankuan" .. i]) or 0
-                        local __money = _money - QKmoney
-                        local QKText = ""
-                        if QKmoney > 0 then
-                            QKText = L["（|cffFFD700%s|r-|cffff0000%s|r）"]:format(_money, QKmoney)
-                        end
-                        returntext = L["|cff00BFFF< 退货成功 >|r\n装备：%s\n退货人：%s\n应退金额：|cffFFD700%s|rg%s\nBoss：|cff%s%s"]:format(
-                            _item, SetClassCFF(_buyer), __money, QKText, BG.Boss[FB]["boss" .. b]["color"], BG.Boss[FB]["boss" .. b]["name2"])
-                        hasItem = true
-                        if saved then
-                            buyer:Clear()
-                            money:Clear()
-                            money:ClearQK()
-                        end
-                        return true
-                    end
-                end)
-                if not hasItem then
+                local returned = FindReturnedTableItem(Player, targetItem.link)
+                if not returned then
                     returntext = L["|cffDC143C< 退货失败 >|r\n表格里没找到此件装备"]
                     BG.tradeSeeFrame.frame:SetFalseColor()
                 else
+                    local _item = returned.item:GetText()
+                    local _buyer = returned.buyer:GetText()
+                    local _money = returned.money:GetText()
+                    local QKmoney = tonumber(BiaoGe[returned.FB]["boss" .. returned.b]["qiankuan" .. returned.i]) or 0
+                    local __money = (tonumber(_money) or 0) - QKmoney
+                    local QKText = ""
+                    if QKmoney > 0 then
+                        QKText = L["（|cffFFD700%s|r-|cffff0000%s|r）"]:format(_money, QKmoney)
+                    end
+                    returntext = L["|cff00BFFF< 退货成功 >|r\n装备：%s\n退货人：%s\n应退金额：|cffFFD700%s|rg%s\nBoss：|cff%s%s"]:format(
+                        _item, SetClassCFF(_buyer), __money, QKText,
+                        BG.Boss[returned.FB]["boss" .. returned.b]["color"],
+                        BG.Boss[returned.FB]["boss" .. returned.b]["name2"])
+                    if saved then
+                        FinalizeReturnedItem(returned)
+                    end
                     BG.tradeSeeFrame.frame:SetGreenColor()
                 end
                 return returntext
@@ -1222,6 +1315,12 @@ BG.Init(function()
                         for i, v in ipairs(BG.trade.targetitems) do
                             local itemID = GetItemID(v.link)
                             BG.CancelGuanZhuAndHopeInTrade(itemID)
+                        end
+                        if #BG.trade.playeritems == 1 and BG.IsMLByName(BG.trade.target) then
+                            local returned = FindReturnedTableItem(BG.playerName, BG.trade.playeritems[1].link)
+                            if returned then
+                                FinalizeReturnedItem(returned)
+                            end
                         end
                     else
                         local text = BG.GetTradeSeeText("saved")

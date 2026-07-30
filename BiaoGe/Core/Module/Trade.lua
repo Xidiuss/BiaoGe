@@ -2432,98 +2432,61 @@ BG.Init(function()
 
         -- 自动拍卖的每个装备单独记账而不是打包记账
         BG.trade.autoAuction = {}
-        function BG.TradeIsAutoAuction()
-            local FB = BG.FB1
-            wipe(BG.trade.autoAuction)
-            local player
-            if BG.ImML() then
-                player = BG.GN("NPC")
-                local targetMoney = math.modf(GetTargetTradeMoney() / 10000)
-                local sumqiankuan = tonumber(BG.tradeQianKuanEdit:GetText()) or 0
-                if sumTargetMoney ~= 0 and sumTargetMoney == targetMoney + sumqiankuan then
-                    for i = 1, 6 do
-                        local link = GetTradePlayerItemLink(i)
-                        if link then
-                            local bt = _G["TradePlayerItem" .. i .. "ItemButton"].moneyText
-                            if not bt:IsVisible() then
-                                wipe(BG.trade.autoAuction)
-                                return
-                            end
-                            local money = bt.money
-                            local qiankuan = 0
-                            if sumqiankuan ~= 0 then
-                                if sumqiankuan > money then
-                                    qiankuan = money
-                                    sumqiankuan = sumqiankuan - qiankuan
-                                else
-                                    qiankuan = sumqiankuan
-                                    sumqiankuan = 0
-                                end
-                            end
-                            tinsert(BG.trade.autoAuction, {
-                                link = link,
-                                player = player,
-                                money = money,
-                                qiankuan = qiankuan,
-                            })
-                        end
-                    end
-                    -- 如果还有剩余欠款
-                    if sumqiankuan > 0 then
-                        local last = BG.trade.autoAuction[#BG.trade.autoAuction]
-                        if last then
-                            last.qiankuan = last.qiankuan + sumqiankuan
-                        end
+        local function BuildAutoAuctionEntries(tradeName, items, paidMoney, remainingDebt)
+            local auctionRecords = tradeName and BG.auctionTrade[tradeName]
+            if not (items and items[1] and auctionRecords and auctionRecords[1]) then return end
+
+            paidMoney = tonumber(paidMoney) or 0
+            remainingDebt = tonumber(remainingDebt) or 0
+            if paidMoney < 0 or remainingDebt < 0 then return end
+
+            local entries = {}
+            local usedAuctionRecords = {}
+            local expectedMoney = 0
+            for _, item in ipairs(items) do
+                local matchedRecord
+                for recordIndex, record in ipairs(auctionRecords) do
+                    if not usedAuctionRecords[recordIndex] and BG.IsSameItem(record.zhuangbei, item.link) then
+                        local money = tonumber(record.jine)
+                        if not money or money <= 0 then return end
+                        usedAuctionRecords[recordIndex] = true
+                        expectedMoney = expectedMoney + money
+                        matchedRecord = {
+                            link = item.link,
+                            player = tradeName,
+                            money = money,
+                            qiankuan = 0,
+                        }
+                        break
                     end
                 end
-            else
-                player = BG.playerName
-                local playerMoney = math.modf(GetPlayerTradeMoney() / 10000)
-                local sumqiankuan = tonumber(BG.tradeQianKuanEdit:GetText()) or 0
-                if sumPlayerMoney ~= 0 and sumPlayerMoney == playerMoney + sumqiankuan then
-                    for i = 1, 6 do
-                        local link = GetTradeTargetItemLink(i)
-                        if link then
-                            local bt = _G["TradeRecipientItem" .. i .. "ItemButton"].moneyText
-                            if not bt:IsVisible() then
-                                wipe(BG.trade.autoAuction)
-                                return
-                            end
-                            local money = bt.money
-                            local qiankuan = 0
-                            if sumqiankuan ~= 0 then
-                                if sumqiankuan > money then
-                                    qiankuan = money
-                                    sumqiankuan = sumqiankuan - qiankuan
-                                else
-                                    qiankuan = sumqiankuan
-                                    sumqiankuan = 0
-                                end
-                            end
-                            tinsert(BG.trade.autoAuction, {
-                                link = link,
-                                player = player,
-                                money = money,
-                                qiankuan = qiankuan,
-                            })
-                        end
-                    end
-                    -- 如果还有剩余欠款
-                    if sumqiankuan > 0 then
-                        local last = BG.trade.autoAuction[#BG.trade.autoAuction]
-                        if last then
-                            last.qiankuan = last.qiankuan + sumqiankuan
-                        end
-                    end
-                end
+                if not matchedRecord then return end
+                tinsert(entries, matchedRecord)
             end
-            -- 确认表格里是否能全部匹配到合适的格子
-            local same = {}
-            for _, v in ipairs(BG.trade.autoAuction) do
+
+            if expectedMoney ~= paidMoney + remainingDebt then return end
+
+            for _, entry in ipairs(entries) do
+                if remainingDebt <= 0 then break end
+                local debt = min(remainingDebt, entry.money)
+                entry.qiankuan = debt
+                remainingDebt = remainingDebt - debt
+            end
+            if remainingDebt > 0 then
+                local last = entries[#entries]
+                last.qiankuan = last.qiankuan + remainingDebt
+            end
+            return entries
+        end
+
+        local function MatchAutoAuctionTableRows(FB, entries)
+            local usedTableRows = {}
+            for _, v in ipairs(entries) do
                 local done
                 for b = 1, Maxb[FB] do
                     for i = 1, BG.GetMaxi(FB, b) do
-                        if not same[b .. "-" .. i] then
+                        local rowKey = b .. "-" .. i
+                        if not usedTableRows[rowKey] then
                             local bt = BG.Frame[FB]["boss" .. b]["zhuangbei" .. i]
                             if bt and BG.IsSameItem(bt:GetText(), v.link) and
                                 BG.Frame[FB]["boss" .. b]["maijia" .. i]:GetText() == "" and
@@ -2533,17 +2496,42 @@ BG.Init(function()
                                 v.b = b
                                 v.i = i
                                 done = true
-                                same[b .. "-" .. i] = true
+                                usedTableRows[rowKey] = true
                                 break
                             end
                         end
                     end
                     if done then break end
                 end
-                if not done then
-                    wipe(BG.trade.autoAuction)
-                    return
-                end
+                if not done then return end
+            end
+            return true
+        end
+
+        function BG.TradeIsAutoAuction()
+            local FB = BG.FB1
+            local remainingDebt = tonumber(BG.tradeQianKuanEdit:GetText()) or 0
+            local entries
+            if BG.ImML() then
+                entries = BuildAutoAuctionEntries(
+                    BG.trade.target,
+                    BG.trade.playeritems,
+                    BG.trade.targetmoney,
+                    remainingDebt
+                )
+            else
+                entries = BuildAutoAuctionEntries(
+                    BG.playerName,
+                    BG.trade.targetitems,
+                    BG.trade.playermoney,
+                    remainingDebt
+                )
+            end
+
+            wipe(BG.trade.autoAuction)
+            if not (entries and MatchAutoAuctionTableRows(FB, entries)) then return end
+            for _, entry in ipairs(entries) do
+                tinsert(BG.trade.autoAuction, entry)
             end
         end
 

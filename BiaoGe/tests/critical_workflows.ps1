@@ -507,6 +507,47 @@ foreach ($marker in @(
 if ($auctionMoneyBlock -match 'GetMoneyString\(') {
     $failures += "Automatic-auction trade overlays must not emit GetMoneyString texture markup."
 }
+
+# Runtime Gate 4F: accounting identity comes from the finalized trade
+# snapshot plus distinct durable auction records, never from presentation
+# FontString visibility or prices cached on those FontStrings.
+$autoAuctionClassifier = Get-Block `
+    -Text $tradeText `
+    -StartPattern 'local function BuildAutoAuctionEntries\(' `
+    -EndPattern '\n\s*local function UpdateTargetQianKuan\(' `
+    -Description "automatic-auction transaction classifier"
+foreach ($marker in @(
+    'local usedAuctionRecords = {}',
+    'for _, item in ipairs(items) do',
+    'for recordIndex, record in ipairs(auctionRecords) do',
+    'BG.IsSameItem(record.zhuangbei, item.link)',
+    'expectedMoney = expectedMoney + money',
+    'expectedMoney ~= paidMoney + remainingDebt',
+    'local usedTableRows = {}',
+    'BG.trade.playeritems',
+    'BG.trade.targetitems',
+    'BG.trade.targetmoney',
+    'BG.trade.playermoney'
+)) {
+    if (-not $autoAuctionClassifier.Contains($marker)) {
+        $failures += "Stable multi-auction allocation is missing marker: $marker"
+    }
+}
+foreach ($forbidden in @(
+    'moneyText:IsVisible()',
+    'moneyText.money',
+    'GetTradePlayerItemLink(',
+    'GetTradeTargetItemLink(',
+    'sumTargetMoney',
+    'sumPlayerMoney'
+)) {
+    if ($autoAuctionClassifier.Contains($forbidden)) {
+        $failures += "Automatic-auction accounting still depends on volatile trade presentation state: $forbidden"
+    }
+}
+if ($tradeText -notmatch '(?s)if next\(BG\.trade\.autoAuction\) then.*?local money = v\.money.*?return returnText.*?local isFirstItem = true') {
+    $failures += "Per-auction persistence must remain ahead of the genuine generic PackingDeal fallback."
+}
 $refundKey = [regex]::Match(
     $tradeText,
     '(?s)CreateFrame\("CheckButton", "BiaoGeTradeRefundCheck".*?bt\.Text:SetText\(L\["([^"]+)"\]\)'

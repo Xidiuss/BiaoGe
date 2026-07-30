@@ -383,6 +383,9 @@ foreach ($marker in @(
     'local function ParseTradeTimeRemaining(',
     ':lower()',
     'gsub("%s+", "")',
+    'h = h or tonumber(normalized:match("(%d+)hour"))',
+    'h = h or tonumber(normalized:match("(%d+)hr"))',
+    'm = m or tonumber(normalized:match("(%d+)min"))',
     'ParseTradeTimeRemaining(time)'
 )) {
     if (-not $itemOutTimeText.Contains($marker)) {

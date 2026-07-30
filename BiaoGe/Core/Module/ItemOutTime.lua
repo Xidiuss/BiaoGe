@@ -28,6 +28,9 @@ local function ParseTradeTimeRemaining(time)
     local minuteUnit = (L["分钟"] or ""):lower():gsub("%s+", ""):gsub("s$", "")
     local h = hourUnit ~= "" and tonumber(normalized:match("(%d+)" .. hourUnit))
     local m = minuteUnit ~= "" and tonumber(normalized:match("(%d+)" .. minuteUnit))
+    h = h or tonumber(normalized:match("(%d+)hour"))
+    h = h or tonumber(normalized:match("(%d+)hr"))
+    m = m or tonumber(normalized:match("(%d+)min"))
     if h or m then
         return (h or 0) * 60 + (m or 0)
     end

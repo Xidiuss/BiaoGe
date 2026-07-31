@@ -579,8 +579,8 @@ if ($itemFormatterIndex -lt 0 -or $tradeInitIndex -lt 0 -or $itemFormatterIndex 
 if (([regex]::Matches($tradeText, 'FormatTradeMoney\(')).Count -ne 3) {
     $failures += "Aggregate trade money formatter census must remain one definition plus two calls."
 }
-if (([regex]::Matches($tradeText, 'FormatTradeItemMoney\(')).Count -ne 3) {
-    $failures += "Per-item trade money formatter census must remain one definition plus two calls."
+if (([regex]::Matches($tradeText, 'FormatTradeItemMoney\(')).Count -ne 2) {
+    $failures += "Per-item trade money formatter census must remain one definition plus its shared setter call."
 }
 if (-not $tradeText.Contains('BG.FormatNumber(tonumber(money) or 0, 2) .. goldTex')) {
     $failures += "Aggregate WotLK-safe trade money formatting lost its fixed gold-icon implementation."
@@ -596,11 +596,30 @@ if ($itemFormatterBlock -notmatch 'return BG\.FormatNumber\(tonumber\(money\) or
 if ($itemFormatterBlock.Contains('goldTex') -or $itemFormatterBlock -match '\|TInterface') {
     $failures += "Per-item trade money formatting must not spend slot width on an inline gold icon."
 }
+$itemMoneySetter = Get-Block `
+    -Text $tradeText `
+    -StartPattern 'local function SetTradeItemMoneyText\(' `
+    -EndPattern '\nend' `
+    -Description "the natural-width per-item trade money setter"
+foreach ($marker in @(
+    'fontString:SetText(label .. FormatTradeItemMoney(money))',
+    'fontString:SetWidth(fontString:GetUnboundedStringWidth())'
+)) {
+    if (-not $itemMoneySetter.Contains($marker)) {
+        $failures += "Per-item trade money labels must resize from their complete localized text: $marker"
+    }
+}
+if (([regex]::Matches($tradeText, 'SetTradeItemMoneyText\(')).Count -ne 3) {
+    $failures += "Natural-width per-item trade money setter census must remain one definition plus two calls."
+}
 if (([regex]::Matches(
     $tradeText,
-    'moneyText:SetText\(L\["[^"]+"\]\s*\.\.\s*FormatTradeItemMoney\(money\)\)'
+    'SetTradeItemMoneyText\([^,\r\n]+,\s*L\["[^"]+"\],\s*money\)'
 )).Count -ne 2) {
-    $failures += "Both per-item renderers must use the plain numeric formatter."
+    $failures += "Both localized per-item renderers must use the natural-width plain-number setter."
+}
+if ($auctionMoneyBlock -match 'Trade(?:Player|Recipient)Item"\s*\.\.\s*i\s*\.\.\s*"Name"\]:GetWidth\(\)') {
+    $failures += "Per-item money labels must not inherit the unrelated native item-name FontString width."
 }
 foreach ($marker in @(
     'FormatTradeMoney(sumTargetMoney)',

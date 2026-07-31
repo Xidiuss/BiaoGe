@@ -47,6 +47,10 @@ end
 local function FormatTradeItemMoney(money)
     return BG.FormatNumber(tonumber(money) or 0, 2)
 end
+local function SetTradeItemMoneyText(fontString, label, money)
+    fontString:SetText(label .. FormatTradeItemMoney(money))
+    fontString:SetWidth(fontString:GetUnboundedStringWidth())
+end
 
 BG.Init(function()
     local function FindReturnedAuctionRecord(Player, itemID)
@@ -2422,7 +2426,6 @@ BG.Init(function()
                 text:SetPoint("BOTTOMLEFT", itemButton, "BOTTOMRIGHT", 8, -2)
                 text:SetFont(BIAOGE_TEXT_FONT, 12, "OUTLINE")
                 text:SetJustifyH("LEFT")
-                text:SetWidth(_G["TradePlayerItem" .. i .. "Name"]:GetWidth())
                 text:SetWordWrap(false)
                 text:Hide()
                 itemButton.moneyText = text
@@ -2432,7 +2435,6 @@ BG.Init(function()
                 text:SetPoint("BOTTOMLEFT", itemButton, "BOTTOMRIGHT", 8, -2)
                 text:SetFont(BIAOGE_TEXT_FONT, 12, "OUTLINE")
                 text:SetJustifyH("LEFT")
-                text:SetWidth(_G["TradeRecipientItem" .. i .. "Name"]:GetWidth())
                 text:SetWordWrap(false)
                 text:Hide()
                 itemButton.moneyText = text
@@ -2786,9 +2788,10 @@ BG.Init(function()
                                 haveItem[i] = true
                                 sumTargetMoney = sumTargetMoney + money
                                 if BiaoGe.options["autoAuctionMoney"] == 1 then
-                                    _G["TradePlayerItem" .. i .. "ItemButton"].moneyText:Show()
-                                    _G["TradePlayerItem" .. i .. "ItemButton"].moneyText:SetText(L["应收："] .. FormatTradeItemMoney(money))
-                                    _G["TradePlayerItem" .. i .. "ItemButton"].moneyText.money = money
+                                    local moneyText = _G["TradePlayerItem" .. i .. "ItemButton"].moneyText
+                                    moneyText:Show()
+                                    SetTradeItemMoneyText(moneyText, L["应收："], money)
+                                    moneyText.money = money
                                 end
                                 break
                             end
@@ -2826,9 +2829,10 @@ BG.Init(function()
                                 haveItem[i] = true
                                 sumPlayerMoney = sumPlayerMoney + money
                                 if BiaoGe.options["autoAuctionMoney"] == 1 then
-                                    _G["TradeRecipientItem" .. i .. "ItemButton"].moneyText:Show()
-                                    _G["TradeRecipientItem" .. i .. "ItemButton"].moneyText:SetText(L["应付："] .. FormatTradeItemMoney(money))
-                                    _G["TradeRecipientItem" .. i .. "ItemButton"].moneyText.money = money
+                                    local moneyText = _G["TradeRecipientItem" .. i .. "ItemButton"].moneyText
+                                    moneyText:Show()
+                                    SetTradeItemMoneyText(moneyText, L["应付："], money)
+                                    moneyText.money = money
                                 end
                                 break
                             end

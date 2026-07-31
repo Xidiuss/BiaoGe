@@ -335,12 +335,14 @@ BG.Init(function()
             end
         end
     end)
-    BG.RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED", function(self, event, ...)
-        local _, subEvent, _, _, _, _, _, _, destName = ...
-        if subEvent ~= "UNIT_DIED" then return end
-        local FB = BG.FB2
-        if not FB then return end
-        SetBossIndexByName(FB, destName, true)
+    BG.Init3(function()
+        if not BG.IsWLK_80 then return end
+        local DBM = _G.DBM
+        if not (DBM and type(DBM.RegisterCallback) == "function") then return end
+        DBM:RegisterCallback("kill", function(_, mod)
+            local bossName = type(mod) == "table" and mod.combatInfo and mod.combatInfo.name
+            SetBossIndexByName(BG.FB2, bossName, true)
+        end)
     end)
     BG.RegisterEvent("PLAYER_REGEN_ENABLED", function(self, event)
         if start then

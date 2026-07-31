@@ -44,6 +44,9 @@ local goldTex = "|TInterface\\MoneyFrame\\UI-GoldIcon:14:14:2:0|t"
 local function FormatTradeMoney(money)
     return BG.FormatNumber(tonumber(money) or 0, 2) .. goldTex
 end
+local function FormatTradeItemMoney(money)
+    return BG.FormatNumber(tonumber(money) or 0, 2)
+end
 
 BG.Init(function()
     local function FindReturnedAuctionRecord(Player, itemID)
@@ -540,8 +543,8 @@ BG.Init(function()
             f:SetBackdropColor(0.5, 0, 0, 0.5)
             f:SetBackdropBorderColor(1, 0, 0, .5)
             f:SetHeight(25)
-            f:SetPoint("BOTTOMLEFT", TradeFrame, "TOPLEFT", 7, 0)
-            f:SetPoint("BOTTOMRIGHT", TradeFrame, "TOPRIGHT", -17, 0)
+            f:SetPoint("BOTTOMLEFT", TradeFrame, "TOPLEFT", 10, -6)
+            f:SetPoint("BOTTOMRIGHT", TradeFrame, "TOPRIGHT", -20, -6)
             f:SetFrameLevel((TradeRecipientMoneyBg and TradeRecipientMoneyBg:GetFrameLevel() or 5) + 10)
             f:SetToplevel(true)
             f:EnableMouse(true)
@@ -2784,7 +2787,7 @@ BG.Init(function()
                                 sumTargetMoney = sumTargetMoney + money
                                 if BiaoGe.options["autoAuctionMoney"] == 1 then
                                     _G["TradePlayerItem" .. i .. "ItemButton"].moneyText:Show()
-                                    _G["TradePlayerItem" .. i .. "ItemButton"].moneyText:SetText(L["应收："] .. FormatTradeMoney(money))
+                                    _G["TradePlayerItem" .. i .. "ItemButton"].moneyText:SetText(L["应收："] .. FormatTradeItemMoney(money))
                                     _G["TradePlayerItem" .. i .. "ItemButton"].moneyText.money = money
                                 end
                                 break
@@ -2824,7 +2827,7 @@ BG.Init(function()
                                 sumPlayerMoney = sumPlayerMoney + money
                                 if BiaoGe.options["autoAuctionMoney"] == 1 then
                                     _G["TradeRecipientItem" .. i .. "ItemButton"].moneyText:Show()
-                                    _G["TradeRecipientItem" .. i .. "ItemButton"].moneyText:SetText(L["应付："] .. FormatTradeMoney(money))
+                                    _G["TradeRecipientItem" .. i .. "ItemButton"].moneyText:SetText(L["应付："] .. FormatTradeItemMoney(money))
                                     _G["TradeRecipientItem" .. i .. "ItemButton"].moneyText.money = money
                                 end
                                 break

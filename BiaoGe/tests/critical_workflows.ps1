@@ -336,10 +336,11 @@ foreach ($traceMarker in @(
     }
 }
 
-# Runtime Gate 3 L10: WotLK has no ENCOUNTER_START/END payload contract.
-# Capture the boss row from boss units or an exact post-kill combat-log name,
-# and use the loot DB only when it gives one unambiguous source instead of
-# guessing the first shared-drop match.
+# Runtime Gate 7: WotLK has no ENCOUNTER_START/END payload contract and the
+# target backport did not populate a usable exact UNIT_DIED destination name.
+# Keep native boss units, then optionally consume the installed legacy DBM's
+# proven lowercase kill callback after addon loading. The loot DB remains a
+# unique-source-only fallback.
 foreach ($marker in @(
     'f:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")',
     'local function SetBossIndexByName(',
@@ -347,9 +348,13 @@ foreach ($marker in @(
     'local unit = "boss" .. i',
     'local unitName = UnitName(unit)',
     'SetBossIndexByName(FB, unitName)',
-    'BG.RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED"',
-    'if subEvent ~= "UNIT_DIED" then return end',
-    'SetBossIndexByName(FB, destName, true)',
+    'BG.Init3(function()',
+    'if not BG.IsWLK_80 then return end',
+    'local DBM = _G.DBM',
+    'if not (DBM and type(DBM.RegisterCallback) == "function") then return end',
+    'DBM:RegisterCallback("kill", function(_, mod)',
+    'local bossName = type(mod) == "table" and mod.combatInfo and mod.combatInfo.name',
+    'SetBossIndexByName(BG.FB2, bossName, true)',
     'BG.RegisterEvent("PLAYER_REGEN_ENABLED"',
     'local function GetBossIndexByLootItem(',
     'local difficultyID = GetRaidDifficultyID and GetRaidDifficultyID()',
@@ -361,6 +366,9 @@ foreach ($marker in @(
         $failures += "WotLK boss-row routing is missing marker: $marker"
     }
 }
+if ($lootText.Contains('BG.RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED"')) {
+    $failures += "The runtime-refuted UNIT_DIED destination-name route must be removed before the DBM kill replacement."
+}
 if ($lootText -match '(?s)GetBossIndexByLootItem\(.*?return candidates\[1\].*?#candidates') {
     $failures += "Loot DB fallback must prove uniqueness before selecting a boss row."
 }
@@ -370,10 +378,10 @@ $bossNameMatcher = Get-Block `
     -EndPattern '\n\s*local function SetBossIndexFromUnits\(' `
     -Description "the exact boss-name matcher"
 if ($bossNameMatcher -notmatch 'bossInfo\.name2\s*==\s*bossName') {
-    $failures += "Boss combat-log routing must require an exact localized Tables boss name."
+    $failures += "Boss routing must require an exact localized Tables boss name."
 }
 if ($bossNameMatcher -match 'find\(|match\(|lower\(') {
-    $failures += "Boss combat-log routing must not guess with fuzzy or partial boss-name matching."
+    $failures += "Boss routing must not guess with fuzzy or partial boss-name matching."
 }
 
 # Runtime Gate 1: WotLK master-looter ownership must not be permanently false.
@@ -481,8 +489,8 @@ if ($tradePreviewReset -notmatch 'IsInRaid\(1\)\s+and\s+not BG\.IsAutoCreateBill
     $failures += "Accounting Preview Reset must suppress automatic-bill raid members just like Update."
 }
 foreach ($marker in @(
-    'f:SetPoint("BOTTOMLEFT", TradeFrame, "TOPLEFT", 7, 0)',
-    'f:SetPoint("BOTTOMRIGHT", TradeFrame, "TOPRIGHT", -17, 0)',
+    'f:SetPoint("BOTTOMLEFT", TradeFrame, "TOPLEFT", 10, -6)',
+    'f:SetPoint("BOTTOMRIGHT", TradeFrame, "TOPRIGHT", -20, -6)',
     'text:SetPoint("LEFT", f, "LEFT", 8, 0)',
     'text:SetPoint("RIGHT", edit, "LEFT", -8, 0)',
     'text:SetWordWrap(false)'
@@ -552,19 +560,61 @@ $formatterDefinitions = [regex]::Matches(
 if ($formatterDefinitions.Count -ne 1) {
     $failures += "Trade money formatting needs exactly one module-local definition (found $($formatterDefinitions.Count))."
 }
+$itemFormatterDefinitions = [regex]::Matches(
+    $tradeText,
+    '(?m)^local function FormatTradeItemMoney\(money\)'
+)
+if ($itemFormatterDefinitions.Count -ne 1) {
+    $failures += "Per-item trade money formatting needs exactly one module-local definition (found $($itemFormatterDefinitions.Count))."
+}
 $formatterIndex = $tradeText.IndexOf('local function FormatTradeMoney(money)')
+$itemFormatterIndex = $tradeText.IndexOf('local function FormatTradeItemMoney(money)')
 $tradeInitIndex = $tradeText.IndexOf('BG.Init(function()')
 if ($formatterIndex -lt 0 -or $tradeInitIndex -lt 0 -or $formatterIndex -ge $tradeInitIndex) {
-    $failures += "FormatTradeMoney must be defined before BG.Init so all four event handlers retain lexical access."
+    $failures += "FormatTradeMoney must be defined before BG.Init so both aggregate handlers retain lexical access."
 }
-if (([regex]::Matches($tradeText, 'FormatTradeMoney\(')).Count -ne 5) {
-    $failures += "Trade money formatter census must remain one definition plus four calls."
+if ($itemFormatterIndex -lt 0 -or $tradeInitIndex -lt 0 -or $itemFormatterIndex -ge $tradeInitIndex) {
+    $failures += "FormatTradeItemMoney must be defined before BG.Init so both per-item handlers retain lexical access."
+}
+if (([regex]::Matches($tradeText, 'FormatTradeMoney\(')).Count -ne 3) {
+    $failures += "Aggregate trade money formatter census must remain one definition plus two calls."
+}
+if (([regex]::Matches($tradeText, 'FormatTradeItemMoney\(')).Count -ne 3) {
+    $failures += "Per-item trade money formatter census must remain one definition plus two calls."
 }
 if (-not $tradeText.Contains('BG.FormatNumber(tonumber(money) or 0, 2) .. goldTex')) {
-    $failures += "WotLK-safe trade money formatting lost its fixed gold-icon implementation."
+    $failures += "Aggregate WotLK-safe trade money formatting lost its fixed gold-icon implementation."
+}
+$itemFormatterBlock = Get-Block `
+    -Text $tradeText `
+    -StartPattern 'local function FormatTradeItemMoney\(money\)' `
+    -EndPattern '\nend' `
+    -Description "the per-item trade money formatter"
+if ($itemFormatterBlock -notmatch 'return BG\.FormatNumber\(tonumber\(money\) or 0,\s*2\)') {
+    $failures += "Per-item trade money formatting must remain plain numeric text."
+}
+if ($itemFormatterBlock.Contains('goldTex') -or $itemFormatterBlock -match '\|TInterface') {
+    $failures += "Per-item trade money formatting must not spend slot width on an inline gold icon."
+}
+if (([regex]::Matches(
+    $tradeText,
+    'moneyText:SetText\(L\["[^"]+"\]\s*\.\.\s*FormatTradeItemMoney\(money\)\)'
+)).Count -ne 2) {
+    $failures += "Both per-item renderers must use the plain numeric formatter."
+}
+foreach ($marker in @(
+    'FormatTradeMoney(sumTargetMoney)',
+    'FormatTradeMoney(sumPlayerMoney)'
+)) {
+    if (-not $tradeText.Contains($marker)) {
+        $failures += "Aggregate trade money renderer is missing marker: $marker"
+    }
 }
 if ($auctionMoneyBlock.Contains('local function FormatTradeMoney(money)')) {
     $failures += "FormatTradeMoney is still trapped inside the UI-construction block."
+}
+if ($auctionMoneyBlock.Contains('local function FormatTradeItemMoney(money)')) {
+    $failures += "FormatTradeItemMoney is trapped inside the UI-construction block."
 }
 if ($auctionMoneyBlock -match 'GetMoneyString\(') {
     $failures += "Automatic-auction trade overlays must not emit GetMoneyString texture markup."
